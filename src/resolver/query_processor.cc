@@ -45,26 +45,4 @@ const string QueryProcessor::getDnsNameFormat(const string hostAddress){
 
 
 
-/*
-//this will convert www.google.com to 3www6google3com ;got it :)
-void ChangetoDnsNameFormat(unsigned char* dns,unsigned char* host)
-{
-	int lock=0 , i;
 
-	strcat((char*)host,".");
-
-	for(i=0 ; i<(int)strlen((char*)host) ; i++)
-	{
-		if(host[i]=='.')
-		{
-			*dns++=i-lock;
-			for(;lock<i;lock++)
-			{
-				*dns++=host[lock];
-			}
-			lock++; //or lock=i+1;
-		}
-	}
-	*dns++='\0';
-}
-*/
