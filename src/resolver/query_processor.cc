@@ -4,6 +4,7 @@
  *  Created on: Mar 31, 2012
  *      Author: jon
  */
+#include <vector>
 #include "../common/io.h"
 #include "../common/dns.h"
 #include "../common/query_processor.h"
@@ -12,7 +13,8 @@
 QueryProcessor::QueryProcessor() {}
 
 
-Request QueryProcessor::getDnsQuery(string hostAddress){
+Request* QueryProcessor::getDnsQuery(char* hostAddress){
+	Request* request = (Request*)malloc(sizeof(Request));
 	Header* header = (Header*)malloc(sizeof(Header));
 	Question* question;
 
@@ -27,6 +29,9 @@ Request QueryProcessor::getDnsQuery(string hostAddress){
 	question->QTYPE = htons(28);
 	question->QCLASS =htons(1);
 
+	request->header = header;
+	request->query = question;
+	return request;
 }
 
 
@@ -35,13 +40,22 @@ uint16_t QueryProcessor::getRandomId(){
 }
 
 
-const string QueryProcessor::getDnsNameFormat(const string hostAddress){
-
-
-
+char* QueryProcessor::getDnsNameFormat(char* hostAddress){
+	  string hostParts[255];
+	  int i=0;
+      char * pch;
+      pch= strtok (hostAddress,".");
+      hostParts[i] = string(pch);
+      i++;
+	  while (pch != NULL)
+	  {
+	    pch = strtok (NULL, ".");
+	    if(pch != NULL){
+	    	hostParts[i] = string(pch);
+	    	i++;
+	    }
+	  }
 }
-
-
 
 
 

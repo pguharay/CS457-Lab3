@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <fstream>
+#include "../common/query_processor.h"
 
 void showUsageandExit()
 {
@@ -40,6 +41,10 @@ int main(int argc, char** argv)
 		showUsageandExit();
 
 	hostName = argv[1];
+
+	//JE: using this code to test...
+	QueryProcessor* qp = (QueryProcessor*)malloc(sizeof(QueryProcessor));
+	qp->getDnsNameFormat(hostName);
 
 	// ==> do some checking to verify valid hostname - in query processor?
 
