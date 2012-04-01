@@ -18,7 +18,7 @@
 #ifndef IO_H_
 #define IO_H_
 
-#define DNS_PORT "55"
+#define DNS_PORT "53"
 
 class UDPClient
 {
@@ -30,8 +30,8 @@ class UDPClient
 		int 			socketID;
 	public:
 		UDPClient(string serverHost);
-		void sendRequest(Request* request);
-		Response* receiveResponse();
+		void sendRequest(Request request);
+		Response receiveResponse();
 };
 
 #endif

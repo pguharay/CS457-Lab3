@@ -35,8 +35,8 @@ typedef struct __attribute__((packed)) query
 
 typedef struct __attribute__((packed)) resolver_request
 {
-	Header* 		header;
-	Question* 		query;
+	Header 		header;
+	Question	query;
 }Request;
 
 typedef struct __attribute__((packed)) resource_record
