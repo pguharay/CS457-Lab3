@@ -1,5 +1,5 @@
 EXECUTABLE = dns
-DEPENDENCY = ./obj/dns.o
+DEPENDENCY = ./obj/dns.o ./obj/query_resolver.o 
 CC = g++ 
 CCFLAGS= -Wall -c -g
 OBJ_DIR=obj
@@ -9,6 +9,9 @@ EXE_DIR=build
 $(EXECUTABLE) : $(DEPENDENCY)
 	$(CC) $(DEPENDENCY) -o $(EXECUTABLE)
 
-./obj/dns.o : ./$(SRC_DIR)/launcher/dns_client.cc ./$(SRC_DIR)/common/resolver.h ./$(SRC_DIR)/common/util.h ./$(SRC_DIR)/common/io.h ./$(SRC_DIR)/common/dns.h
+./obj/dns.o : ./$(SRC_DIR)/launcher/dns_client.cc ./$(SRC_DIR)/common/resolver.h ./$(SRC_DIR)/common/util.h ./$(SRC_DIR)/common/io.h ./$(SRC_DIR)/common/dns.h  
 	$(CC) $(CCFLAGS) ./$(SRC_DIR)/launcher/dns_client.cc -o ./$(OBJ_DIR)/dns.o
-	
+
+./obj/query_resolver.o : ./$(SRC_DIR)/common/query_processor.h 
+	$(CC) $(CCFLAGS) ./$(SRC_DIR)/resolver/query_processor.cc -o ./$(OBJ_DIR)/query_resolver.o
+ 	
