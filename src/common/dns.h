@@ -7,7 +7,6 @@
 
 using namespace std;
 
-
 typedef struct __attribute__((packed)) request_header
 {
 	uint16_t 		  ID; 			 // A 16 bit identifier assigned by the program that generates any kind of query
