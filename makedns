@@ -1,0 +1,14 @@
+EXECUTABLE = dns
+DEPENDENCY = ./obj/dns.o
+CC = g++ 
+CCFLAGS= -Wall -c -g
+OBJ_DIR=obj
+SRC_DIR=src
+EXE_DIR=build
+	
+$(EXECUTABLE) : $(DEPENDENCY)
+	$(CC) $(DEPENDENCY) -o $(EXECUTABLE)
+
+./obj/dns.o : ./$(SRC_DIR)/launcher/dns_client.cc ./$(SRC_DIR)/common/resolver.h ./$(SRC_DIR)/common/util.h ./$(SRC_DIR)/common/io.h ./$(SRC_DIR)/common/dns.h
+	$(CC) $(CCFLAGS) ./$(SRC_DIR)/launcher/dns_client.cc -o ./$(OBJ_DIR)/dns.o
+	

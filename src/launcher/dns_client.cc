@@ -7,7 +7,7 @@ void showUsageandExit()
 	exit(-1);
 }
 
-void printResults(char* hostname, int numAddresses, char** addresses)
+void printResults(char* hostname, int numAddresses, const char** addresses)
 {
 	if (numAddresses == 0)
 	{
@@ -33,7 +33,7 @@ int main(int argc, char** argv)
 {
 	char* hostName = NULL;
 	int nAddresses = 0;
-	char** entries;
+	const char** entries;
 
 	// == parse command line arguments ==
 	if (argc != 2)
@@ -52,11 +52,11 @@ int main(int argc, char** argv)
 
 
 	// for testing...
-	entries = new char*[2];
+	entries = new const char*[2];
 	nAddresses++;
-	entries[0] = "this is a test";
+	entries[0] = std::string("this is a test").c_str();
 	nAddresses++;
-	entries[1] = "this is a test too";
+	entries[1] = std::string("this is a test too").c_str();
 
 	// == print results ==
 	printResults(hostName, nAddresses, entries);
