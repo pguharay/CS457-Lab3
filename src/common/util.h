@@ -1,7 +1,8 @@
+#include "resolver.h"
+
 #ifndef PARSER_H_
 #define PARSER_H_
 
-#include "resolver.h"
 
 using namespace std;
 

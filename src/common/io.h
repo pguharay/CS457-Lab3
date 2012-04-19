@@ -1,6 +1,3 @@
-#ifndef IO_H_
-#define IO_H_
-
 #include <iostream>
 #include <stdio.h>
 #include <stdlib.h>
@@ -14,8 +11,10 @@
 #include <string.h>
 #include <string>
 #include <fstream>
-
 #include "resolver.h"
+
+#ifndef IO_H_
+#define IO_H_
 
 class UDPClient
 {
