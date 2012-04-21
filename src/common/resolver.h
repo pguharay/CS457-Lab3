@@ -10,7 +10,7 @@ class Resolver
 {
 	public:
 		Resolver(string rootServer[5]);
-		struct Response queryNameServer(string nameserver, struct Request req);
+		Response queryNameServer(string nameserver, Request req);
 };
 
 #endif

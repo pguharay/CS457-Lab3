@@ -7,13 +7,16 @@
 #define info(msg) fprintf(stderr,"%s",msg)
 #define debug(msg, ...) fprintf(stdout, msg, __VA_ARGS__)
 
+#define SUCCESS 0
+#define FAILURE -1
+
 using namespace std;
 
 class Formatter
 {
 	public:
-		struct Request  static createRequest(string domainName);
-		struct Response static formatAsResponse(char* buffer);
+		Request  static createRequest(string domainName);
+		Response static formatAsResponse(char* buffer);
 };
 
 

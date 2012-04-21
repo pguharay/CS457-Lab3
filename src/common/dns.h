@@ -17,10 +17,9 @@ typedef struct __attribute__((packed)) request_header
 	unsigned	char  TC :1;		 //TrunCation
 	unsigned	char  RD :1;		 //Recursion Desired
 	unsigned	char  RA :1;		  //Recursion Available
-	unsigned	char  reserved_Z :3;  //Reserved for future use
-
 	unsigned	char  RCODE :4;		//Response code
 
+	unsigned	char  reserved_Z :3;  //Reserved for future use
 	uint16_t 		  QDCOUNT;		//an unsigned 16 bit integer specifying the number of entries in the question section
 	uint16_t 		  ANCOUNT;		//an unsigned 16 bit integer specifying the number of resource records in the answer section
 	uint16_t 		  ARCOUNT;		//an unsigned 16 bit integer specifying the number of name server resource records in the authority records section
@@ -29,7 +28,7 @@ typedef struct __attribute__((packed)) request_header
 
 typedef struct __attribute__((packed)) query
 {
-	string 			QNAME;
+	char 			QNAME[255];
 	uint16_t  		QTYPE;
 	uint16_t 		QCLASS;
 }Question;
@@ -42,17 +41,17 @@ typedef struct __attribute__((packed)) resolver_request
 
 typedef struct __attribute__((packed)) resource_record
 {
-	string 			NAME;
+	char 			NAME[255];
 	uint16_t  		TYPE;
 	uint16_t  		CLASS;
 	uint16_t   		TTL;
 	uint16_t  		RDLENGTH;
-	string			RDATA;
+	char			RDATA[500];
 }RR;
 
 typedef struct __attribute__((packed)) resolver_response
 {
-	struct RR* record;
+	RR* record;
 }Response;
 
 typedef struct __attribute__((packed)) dnssec_rr
@@ -60,7 +59,7 @@ typedef struct __attribute__((packed)) dnssec_rr
 	uint16_t 	flags;
 	uint8_t  	protocol;
 	uint8_t  	algorithm;
-	string 		public_key;
+	char 		public_key[500];
 }DNSSEC;
 
 typedef struct __attribute__((packed)) rrsig_rr
@@ -72,8 +71,8 @@ typedef struct __attribute__((packed)) rrsig_rr
 	uint32_t 		signature_expiration;
 	uint32_t 		signature_inception;
 	uint16_t        key_tag;
-	string 			signer;
-	string 			signature;
+	char 			signer[400];
+	char 			signature[500];
 }RRSIG;
 
 
