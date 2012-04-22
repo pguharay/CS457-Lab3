@@ -41,22 +41,29 @@ uint16_t QueryProcessor::getRandomId(){
 
 
 char* QueryProcessor::getDnsNameFormat(char* hostAddress){
-	  string hostParts[255];
-	  int i=0;
+	  char * hostParts[255];
       char * pch;
+      char * qName;
+      char * intBuf;
+      int i=0;
+
       pch= strtok(hostAddress,".");
-      hostParts[i] = string(pch);
+      hostParts[i] = pch;
       i++;
-	  while (pch != NULL)
+	  while (pch != 0x0)
 	  {
 	    pch = strtok (NULL, ".");
-	    if(pch != NULL){
-	    	hostParts[i] = string(pch);
+	    if(pch != 0x0){
+	    	hostParts[i] = pch;
 	    	i++;
 	    }
 	  }
 
-	  return NULL;
+	  for(int j=0;j<=255;j++){
+		  //get the length first...
+		  int partLen = len(hostParts[0]);
+
+	  }
 }
 
 
