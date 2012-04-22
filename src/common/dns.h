@@ -9,18 +9,18 @@ using namespace std;
 
 typedef struct __attribute__((packed)) request_header
 {
-	uint16_t 		  ID; 			 // A 16 bit identifier assigned by the program that generates any kind of query
+	uint16_t 		  ID; 			  // A 16 bit identifier assigned by the program that generates any kind of query
 
-	unsigned	char  QR :1;		  //A one bit field that specifies whether this message is a query
-	unsigned	char  OPCODE :4;      // A four bit field that specifies kind of query in this message
-	unsigned	char  AA :1;         //Authoritative Answer
-	unsigned	char  TC :1;		 //Truncation
-	unsigned	char  RD :1;		 //Recursion Desired
-	unsigned	char  RA :1;		  //Recursion Available
+	unsigned	char  RD 	:1;		  //Recursion Desired
+	unsigned	char  TC 	:1;		  //Truncation
+	unsigned	char  AA 	:1;       //Authoritative Answer
+	unsigned	char  OPCODE:4;       // A four bit field that specifies kind of query in this message
+	unsigned	char  QR	:1;		  //A one bit field that specifies whether this message is a query
+	unsigned	char  RCODE :4;		  //Response code
 	unsigned	char  reserved_1 :1;  //Reserved for future use
 	unsigned	char  reserved_2 :1;  //Reserved for future use
 	unsigned	char  reserved_3 :1;  //Reserved for future use
-	unsigned	char  RCODE :4;		//Response code
+	unsigned	char  RA :1;		  //Recursion Available
 
 	uint16_t 		  QDCOUNT;		//an unsigned 16 bit integer specifying the number of entries in the question section
 	uint16_t 		  ANCOUNT;		//an unsigned 16 bit integer specifying the number of resource records in the answer section
@@ -30,24 +30,24 @@ typedef struct __attribute__((packed)) request_header
 
 typedef struct __attribute__((packed)) query
 {
-	char 			QNAME[500];
 	uint16_t  		QTYPE;
 	uint16_t 		QCLASS;
 }Question;
 
 typedef struct __attribute__((packed)) resource_record
 {
-	char 			NAME[255];
+	char 			NAME[32];
 	uint16_t  		TYPE;
 	uint16_t  		CLASS;
 	uint16_t   		TTL;
 	uint16_t  		RDLENGTH;
-	char			RDATA[500];
+	char			RDATA[128];
 }RR;
 
 typedef struct __attribute__((packed)) resolver_request
 {
 	Header 		header;
+	char		QNAME[50];
 	Question	query;
 	RR 			resourceRecord;
 }Message;
@@ -63,7 +63,7 @@ typedef struct __attribute__((packed)) dnssec_rr
 	uint16_t 	flags;
 	uint8_t  	protocol;
 	uint8_t  	algorithm;
-	char 		public_key[500];
+	char 		public_key[256];
 }DNSSEC;
 
 typedef struct __attribute__((packed)) rrsig_rr
@@ -75,8 +75,8 @@ typedef struct __attribute__((packed)) rrsig_rr
 	uint32_t 		signature_expiration;
 	uint32_t 		signature_inception;
 	uint16_t        key_tag;
-	char 			signer[400];
-	char 			signature[500];
+	char 			signer[256];
+	char 			signature[256];
 }RRSIG;
 
 

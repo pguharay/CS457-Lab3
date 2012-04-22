@@ -7,13 +7,9 @@ int main(int argc, char** argv)
 	string serverHost = *(argv + 1);
 	string domainName = *(argv + 2);
 
-	srand(time(NULL));
-
 	UDPClient* client = new UDPClient(serverHost);
 
 	Message request = prepareRequest(domainName);
-
-	debug("ID %u \n", ntohs(request.header.ID));
 
 	client->sendRequest(request);
 
@@ -25,24 +21,28 @@ int main(int argc, char** argv)
 void printResponse(Message message)
 {
 	debug("ID = %u \n", ntohs(message.header.ID));
-	debug("QR = %x \n", message.header.QR);
-	debug("OPCODE = %x \n", message.header.OPCODE);
-	debug("AA = %x \n", message.header.AA);
-	debug("TC = %x \n", message.header.TC);
-	debug("RD = %x \n", message.header.RD);
-	debug("RA = %x \n", message.header.RA);
-	debug("RCODE =%x \n", message.header.RCODE);
+	debug("QR = 0x%x \n", message.header.QR);
+	debug("OPCODE = 0x%x \n", message.header.OPCODE);
+	debug("AA = 0x%x \n", message.header.AA);
+	debug("TC = 0x%x \n", message.header.TC);
+	debug("RD = 0x%x \n", message.header.RD);
+	debug("RA = 0x%x \n", message.header.RA);
+	debug("RCODE = 0x%x \n", message.header.RCODE);
 	debug("QDCount = %u \n", ntohs(message.header.QDCOUNT));
 	debug("ANCount = %u \n", ntohs(message.header.ANCOUNT));
 	debug("ARCount = %u \n", ntohs(message.header.ARCOUNT));
 	debug("NSCount = %u \n", ntohs(message.header.NSCOUNT));
+	debug("QNAME = %s \n", message.QNAME);
+	debug("QTYPE = %u \n", ntohs(message.query.QTYPE));
+	debug("QCLASS = %u \n", ntohs(message.query.QCLASS));
 }
 
 Message prepareRequest(string domainName)
 {
-	Header header;
+	uint16_t randomID = time(NULL) % 100;
 
-	header.ID = htons(10);
+    Header header;
+    header.ID = htons(randomID);
 	header.QR = 0;
 	header.OPCODE = 0;
 	header.AA = 0;
@@ -61,12 +61,15 @@ Message prepareRequest(string domainName)
 	string qname = formatDNSName(domainName);
 
 	Question question;
-	memcpy(question.QNAME, qname.c_str(), qname.size());
 	question.QTYPE = htons(38);
 	question.QCLASS = htons(1);
 
 	Message request;
 	request.header = header;
+
+	memcpy(request.QNAME, qname.c_str(), qname.length()+1);
+	request.QNAME[qname.length() + 1] = '\0';
+
 	request.query = question;
 
 	return request;
@@ -77,19 +80,22 @@ string formatDNSName(string domainName)
 	string dnsformat;
 	int startIndex = 0;
 	int i=0;
+	char length;
 
 	for(;i < static_cast<int>(domainName.size());i++)
 	{
 		if(*(domainName.c_str() +i)  == '.')
 		{
-			dnsformat.push_back(i-startIndex);
-			dnsformat.append(domainName.substr(startIndex, i));
+			length = i-startIndex;
+			dnsformat.push_back(length);
+			dnsformat.append(domainName.substr(startIndex, i-startIndex));
 			startIndex = i+1;
 		}
 	}
 
-	dnsformat.push_back(i-startIndex);
-	dnsformat.append(domainName.substr(startIndex, i));
+	length = i-startIndex;
+	dnsformat.push_back(length);
+	dnsformat.append(domainName.substr(startIndex, length));
 
 	return dnsformat;
 }

@@ -43,14 +43,35 @@ void UDPClient::sendRequest(Message message)
 
 	socklen_t addrlen = sizeof(struct sockaddr);
 
+	createNetworkDataFromMessage(message);
+
 	while (totalBytesSend != sizeof(message))
 	{
-		int bytes = sendto(socketID, (void*) &message, sizeof(message), 0, serverAddress, addrlen);
+		int bytes = sendto(socketID, buffer, sizeof(message), 0, serverAddress, addrlen);
 
 		totalBytesSend += bytes;
 	}
 
 	debug("Total %d bytes send \n", totalBytesSend);
+}
+
+void UDPClient :: createNetworkDataFromMessage(Message message)
+{
+	memcpy(&buffer,&message.header, sizeof(Header));
+
+	char* qname = &message.QNAME[0];
+
+	int i=0;
+
+	while(* (qname + i) != '\0')
+	{
+		buffer[sizeof(Header) + i] = *(qname + i);
+		i++;
+	}
+
+	buffer[sizeof(Header) + i] = '\0';
+
+	memcpy(&buffer[sizeof(Header) + i+1], &message.query, sizeof(Question));
 }
 
 Message UDPClient::receiveResponse()

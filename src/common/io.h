@@ -28,6 +28,9 @@ class UDPClient
 		pollfd   		poller;
 		sockaddr* 		serverAddress;
 		int 			socketID;
+		char 			buffer[500];
+		void createNetworkDataFromMessage(Message message);
+
 	public:
 		UDPClient(string serverHost);
 		void sendRequest(Message request);
