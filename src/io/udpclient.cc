@@ -5,7 +5,7 @@ UDPClient::UDPClient(string serverHost)
 	memset(&serverAddressQuery, 0x0000, sizeof(serverAddressQuery));
 	serverAddressQuery.ai_family = AF_INET;
 
-	int transport = serverAddressQuery.ai_socktype = SOCK_DGRAM;
+	serverAddressQuery.ai_socktype = SOCK_DGRAM;
 
 	int status = getaddrinfo(serverHost.c_str(), DNS_PORT, &serverAddressQuery, &serverAddressResultList);
 
@@ -37,21 +37,23 @@ UDPClient::UDPClient(string serverHost)
 	poller.events = POLLIN;
 }
 
-void UDPClient::sendRequest(Request* request)
+void UDPClient::sendRequest(Request request)
 {
 	int totalBytesSend = 0;
 
 	socklen_t addrlen = sizeof(struct sockaddr);
 
-	while (totalBytesSend != sizeof(Request))
+	while (totalBytesSend != sizeof(request))
 	{
-		int bytes = sendto(socketID, (void*) request, sizeof(Request), 0, serverAddress, addrlen);
+		int bytes = sendto(socketID, (void*) &request, sizeof(request), 0, serverAddress, addrlen);
 
 		totalBytesSend += bytes;
 	}
+
+	debug("Total %d bytes send \n", totalBytesSend);
 }
 
-Response* UDPClient::receiveResponse()
+Response UDPClient::receiveResponse()
 {
 	Response response;
 	socklen_t addrlen = sizeof(struct sockaddr);
@@ -73,9 +75,10 @@ Response* UDPClient::receiveResponse()
 		do
 		{
 			bytes = recvfrom(socketID, &response, sizeof(response), 0, serverAddress, &addrlen);
+			debug("Received %u bytes from server \n", bytes);
 		}
-		while(bytes > 0);
+		while(bytes >= 0);
 	}
 
-	return &response;
+	return response;
 }

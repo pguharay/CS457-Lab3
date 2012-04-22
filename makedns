@@ -1,5 +1,5 @@
 EXECUTABLE = dns
-DEPENDENCY = ./obj/dns.o
+DEPENDENCY = ./obj/dns.o 
 CC = g++ 
 CCFLAGS= -Wall -c -g
 OBJ_DIR=obj
