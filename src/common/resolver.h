@@ -10,7 +10,7 @@ class Resolver
 {
 	public:
 		Resolver(string rootServer[5]);
-		Response queryNameServer(string nameserver, Request req);
+		Response queryNameServer(string nameserver, Message req);
 };
 
 #endif

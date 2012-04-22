@@ -37,15 +37,15 @@ UDPClient::UDPClient(string serverHost)
 	poller.events = POLLIN;
 }
 
-void UDPClient::sendRequest(Request request)
+void UDPClient::sendRequest(Message message)
 {
 	int totalBytesSend = 0;
 
 	socklen_t addrlen = sizeof(struct sockaddr);
 
-	while (totalBytesSend != sizeof(request))
+	while (totalBytesSend != sizeof(message))
 	{
-		int bytes = sendto(socketID, (void*) &request, sizeof(request), 0, serverAddress, addrlen);
+		int bytes = sendto(socketID, (void*) &message, sizeof(message), 0, serverAddress, addrlen);
 
 		totalBytesSend += bytes;
 	}
@@ -53,9 +53,9 @@ void UDPClient::sendRequest(Request request)
 	debug("Total %d bytes send \n", totalBytesSend);
 }
 
-Response UDPClient::receiveResponse()
+Message UDPClient::receiveResponse()
 {
-	Response response;
+	Message  message;
 	socklen_t addrlen = sizeof(struct sockaddr);
 	int status = poll(&poller, 1, 3000);
 	int bytes = -1;
@@ -72,13 +72,11 @@ Response UDPClient::receiveResponse()
 	}
 	else
 	{
-		do
-		{
-			bytes = recvfrom(socketID, &response, sizeof(response), 0, serverAddress, &addrlen);
-			debug("Received %u bytes from server \n", bytes);
-		}
-		while(bytes >= 0);
+		bytes = recvfrom(socketID, &message, sizeof(Message), 0, serverAddress, &addrlen);
+
+		debug("Received %u bytes from server \n", bytes);
+
 	}
 
-	return response;
+	return message;
 }

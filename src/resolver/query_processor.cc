@@ -12,7 +12,7 @@
 QueryProcessor::QueryProcessor() {}
 
 
-Request QueryProcessor::getDnsQuery(string hostAddress){
+Message QueryProcessor::getDnsQuery(string hostAddress){
 	Header* header = (Header*)malloc(sizeof(Header));
 	Question* question;
 

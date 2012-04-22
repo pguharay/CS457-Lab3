@@ -5,6 +5,7 @@
 #define UDPCLIENT_TEST_H_
 
 string formatDNSName(string domainName);
-Request prepareRequest(string domainName);
+Message prepareRequest(string domainName);
+void printResponse(Message message);
 
 #endif

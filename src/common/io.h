@@ -30,8 +30,8 @@ class UDPClient
 		int 			socketID;
 	public:
 		UDPClient(string serverHost);
-		void sendRequest(Request request);
-		Response receiveResponse();
+		void sendRequest(Message request);
+		Message receiveResponse();
 };
 
 #endif

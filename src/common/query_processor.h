@@ -10,7 +10,7 @@ class QueryProcessor
 {
 	public:
 		QueryProcessor();
-		Request getDnsQuery(string hostAddress);
+		Message getDnsQuery(string hostAddress);
 		const string getDnsNameFormat(const string hostAddress);
 
 	private:

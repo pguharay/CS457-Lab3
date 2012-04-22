@@ -11,15 +11,17 @@ typedef struct __attribute__((packed)) request_header
 {
 	uint16_t 		  ID; 			 // A 16 bit identifier assigned by the program that generates any kind of query
 
-	unsigned	char  QR :4;		  //A one bit field that specifies whether this message is a query
+	unsigned	char  QR :1;		  //A one bit field that specifies whether this message is a query
 	unsigned	char  OPCODE :4;      // A four bit field that specifies kind of query in this message
 	unsigned	char  AA :1;         //Authoritative Answer
-	unsigned	char  TC :1;		 //TrunCation
+	unsigned	char  TC :1;		 //Truncation
 	unsigned	char  RD :1;		 //Recursion Desired
 	unsigned	char  RA :1;		  //Recursion Available
+	unsigned	char  reserved_1 :1;  //Reserved for future use
+	unsigned	char  reserved_2 :1;  //Reserved for future use
+	unsigned	char  reserved_3 :1;  //Reserved for future use
 	unsigned	char  RCODE :4;		//Response code
 
-	unsigned	char  reserved_Z :3;  //Reserved for future use
 	uint16_t 		  QDCOUNT;		//an unsigned 16 bit integer specifying the number of entries in the question section
 	uint16_t 		  ANCOUNT;		//an unsigned 16 bit integer specifying the number of resource records in the answer section
 	uint16_t 		  ARCOUNT;		//an unsigned 16 bit integer specifying the number of name server resource records in the authority records section
@@ -28,16 +30,10 @@ typedef struct __attribute__((packed)) request_header
 
 typedef struct __attribute__((packed)) query
 {
-	char 			QNAME[255];
+	char 			QNAME[500];
 	uint16_t  		QTYPE;
 	uint16_t 		QCLASS;
 }Question;
-
-typedef struct __attribute__((packed)) resolver_request
-{
-	Header 		header;
-	Question	query;
-}Request;
 
 typedef struct __attribute__((packed)) resource_record
 {
@@ -49,9 +45,17 @@ typedef struct __attribute__((packed)) resource_record
 	char			RDATA[500];
 }RR;
 
+typedef struct __attribute__((packed)) resolver_request
+{
+	Header 		header;
+	Question	query;
+	RR 			resourceRecord;
+}Message;
+
+
 typedef struct __attribute__((packed)) resolver_response
 {
-	RR* record;
+	RR record;
 }Response;
 
 typedef struct __attribute__((packed)) dnssec_rr

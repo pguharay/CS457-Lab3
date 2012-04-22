@@ -13,3 +13,6 @@ udp_client.o : ../src/io/udpclient.cc ../src/common/io.h
 	$(CC) $(CCFLAGS) ../src/io/udpclient.cc -o udp_client.o
 dns_client.o : ./io/udpclient_test.cc ../$(SRC_DIR)/common/io.h
 	$(CC) $(CCFLAGS) ./io/udpclient_test.cc -o dns_client.o
+	
+clean:
+	rm -f *.o;rm -f dns_client;	

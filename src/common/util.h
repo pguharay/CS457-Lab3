@@ -15,7 +15,7 @@ using namespace std;
 class Formatter
 {
 	public:
-		Request  static createRequest(string domainName);
+		Message  static createRequest(string domainName);
 		Response static formatAsResponse(char* buffer);
 };
 

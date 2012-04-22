@@ -11,25 +11,47 @@ int main(int argc, char** argv)
 
 	UDPClient* client = new UDPClient(serverHost);
 
-	Request request = prepareRequest(domainName);
+	Message request = prepareRequest(domainName);
+
+	debug("ID %u \n", ntohs(request.header.ID));
 
 	client->sendRequest(request);
 
-	Response response = client->receiveResponse();
+	Message message = client->receiveResponse();
+
+	printResponse(message);
 }
 
-Request prepareRequest(string domainName)
+void printResponse(Message message)
+{
+	debug("ID = %u \n", ntohs(message.header.ID));
+	debug("QR = %x \n", message.header.QR);
+	debug("OPCODE = %x \n", message.header.OPCODE);
+	debug("AA = %x \n", message.header.AA);
+	debug("TC = %x \n", message.header.TC);
+	debug("RD = %x \n", message.header.RD);
+	debug("RA = %x \n", message.header.RA);
+	debug("RCODE =%x \n", message.header.RCODE);
+	debug("QDCount = %u \n", ntohs(message.header.QDCOUNT));
+	debug("ANCount = %u \n", ntohs(message.header.ANCOUNT));
+	debug("ARCount = %u \n", ntohs(message.header.ARCOUNT));
+	debug("NSCount = %u \n", ntohs(message.header.NSCOUNT));
+}
+
+Message prepareRequest(string domainName)
 {
 	Header header;
 
-	header.ID = rand();
+	header.ID = htons(10);
 	header.QR = 0;
 	header.OPCODE = 0;
 	header.AA = 0;
 	header.TC = 0;
-	header.RD = 1;
+	header.RD = htons(1);
 	header.RA = 0;
-	header.reserved_Z  = 0;
+	header.reserved_1  = 0;
+	header.reserved_2  = 0;
+	header.reserved_3  = 0;
 	header.RCODE = 0;
 	header.QDCOUNT = htons(1);
 	header.ANCOUNT  = 0;
@@ -40,10 +62,10 @@ Request prepareRequest(string domainName)
 
 	Question question;
 	memcpy(question.QNAME, qname.c_str(), qname.size());
-	question.QTYPE = htons(28);
+	question.QTYPE = htons(38);
 	question.QCLASS = htons(1);
 
-	Request request;
+	Message request;
 	request.header = header;
 	request.query = question;
 
