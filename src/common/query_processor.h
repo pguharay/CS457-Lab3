@@ -10,8 +10,8 @@ class QueryProcessor
 {
 	public:
 		QueryProcessor();
-		Message getDnsQuery(string hostAddress);
-		const string getDnsNameFormat(const string hostAddress);
+		Message* getDnsQuery(char* hostAddress);
+		char* getDnsNameFormat(char* hostAddress);
 
 	private:
 		uint16_t getRandomId();
