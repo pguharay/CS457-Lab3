@@ -7,6 +7,12 @@ int main(int argc, char** argv)
 	string serverHost = *(argv + 1);
 	string domainName = *(argv + 2);
 
+	if(argc <2)
+	{
+		error("Usage: dns_client <name server> <domain name> \n");
+		exit(1);
+	}
+
 	UDPClient* client = new UDPClient(serverHost);
 
 	Message request = prepareRequest(domainName);

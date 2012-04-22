@@ -47,7 +47,7 @@ typedef struct __attribute__((packed)) resource_record
 typedef struct __attribute__((packed)) resolver_request
 {
 	Header 		header;
-	char		QNAME[50];
+	char		QNAME[128];
 	Question	query;
 	RR 			resourceRecord;
 }Message;

@@ -30,7 +30,7 @@ class UDPClient
 		int 			socketID;
 		char 			buffer[500];
 		void createNetworkDataFromMessage(Message message);
-
+		Message formatResponseToMessage(char* response);
 	public:
 		UDPClient(string serverHost);
 		void sendRequest(Message request);

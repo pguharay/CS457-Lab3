@@ -76,7 +76,8 @@ void UDPClient :: createNetworkDataFromMessage(Message message)
 
 Message UDPClient::receiveResponse()
 {
-	Message  message;
+	char  buffer[65536];
+	//Message message;
 	socklen_t addrlen = sizeof(struct sockaddr);
 	int status = poll(&poller, 1, 3000);
 	int bytes = -1;
@@ -93,11 +94,37 @@ Message UDPClient::receiveResponse()
 	}
 	else
 	{
-		bytes = recvfrom(socketID, &message, sizeof(Message), 0, serverAddress, &addrlen);
+		bytes = recvfrom(socketID, buffer, 65536, 0, serverAddress, &addrlen);
+
+		if(bytes < 0)
+		{
+			perror("Not enough bytes in response");
+			exit(1);
+		}
 
 		debug("Received %u bytes from server \n", bytes);
-
 	}
+
+	return formatResponseToMessage(buffer);
+}
+
+Message UDPClient::formatResponseToMessage(char* response)
+{
+	Message message;
+
+	memcpy(&message.header, response, sizeof(Header));
+
+	int i=0;
+
+	while(*(response + sizeof(Header) + i) != '\0')
+	{
+		message.QNAME[i] = *((response + sizeof(Header) + i));
+		i++;
+	}
+
+	message.QNAME[i] = '\0';
+
+	memcpy(&message.query, (response + sizeof(Header) + i+1), sizeof(Question));
 
 	return message;
 }
