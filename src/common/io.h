@@ -14,6 +14,7 @@
 #include <fstream>
 #include "resolver.h"
 #include "util.h"
+#include "response_reader.h"
 
 #ifndef IO_H_
 #define IO_H_
@@ -30,11 +31,11 @@ class UDPClient
 		int 			socketID;
 		char 			buffer[500];
 		void createNetworkDataFromMessage(Message message);
-		Message formatResponseToMessage(char* response);
+		Response formatResponseToMessage(char* response, ResponseReader* responseReader);
 	public:
 		UDPClient(string serverHost);
 		void sendRequest(Message request);
-		Message receiveResponse();
+		Response receiveResponse(ResponseReader* responseReader);
 };
 
 #endif
