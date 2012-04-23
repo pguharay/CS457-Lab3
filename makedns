@@ -1,4 +1,4 @@
-EXECUTABLE = dns
+EXECUTABLE = myresolver
 DEPENDENCY = ./obj/dns.o ./obj/query_resolver.o 
 CC = g++ 
 CCFLAGS= -Wall -c -g
