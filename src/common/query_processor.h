@@ -10,7 +10,7 @@ class QueryProcessor
 {
 	public:
 		QueryProcessor();
-		Message* getDnsQuery(char* hostAddress);
+		Message getDnsQuery(char* hostAddress);
 		char* getDnsNameFormat(char* hostAddress);
 
 	private:

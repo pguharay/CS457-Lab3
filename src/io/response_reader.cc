@@ -1,4 +1,5 @@
 #include "../common/response_reader.h"
+#include "../common/util.h"
 
 Response ResponseReader::read(char* response)
 {
@@ -21,10 +22,11 @@ Response ResponseReader::read(char* response)
 
 	offset = sizeof(Header) + i + 1 + sizeof(Question) + 1;
 
-//	for(int i=0;i<ntohs(message.header.ANCOUNT);i++)
-//	{
-//		//info("answer \n");
-//	}
+	if(message.header.ANCOUNT <= 0)
+	{
+		throw FAILURE;
+	}
+
 
 	readAnswer(response, &message);
 	readAuthoritativeAnswer(response, &message);

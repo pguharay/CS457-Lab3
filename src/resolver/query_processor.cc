@@ -12,8 +12,8 @@
 QueryProcessor::QueryProcessor() {}
 
 
-Message* QueryProcessor::getDnsQuery(char* hostAddress){
-	Message* request = (Message*)malloc(sizeof(Message));
+Message QueryProcessor::getDnsQuery(char* hostAddress){
+	Message request;
 	Header header;
 	Question question;
 
@@ -28,8 +28,8 @@ Message* QueryProcessor::getDnsQuery(char* hostAddress){
 	question.QTYPE = htons(28);
 	question.QCLASS =htons(1);
 
-	request->header = header;
-	request->query = question;
+	request.header = header;
+	request.query = question;
 
 	return request;
 }
@@ -61,7 +61,7 @@ char* QueryProcessor::getDnsNameFormat(char* hostAddress){
 
 	  for(int j=0;j<=255;j++){
 		  //get the length first...
-		  int partLen = len(hostParts[0]);
+		  //int partLen = len(hostParts[0]);
 
 	  }
 }

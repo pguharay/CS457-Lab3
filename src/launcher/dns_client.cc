@@ -4,6 +4,7 @@
 
 #include "../common/query_processor.h"
 #include "../common/io.h"
+#include "../common/util.h"
 
 using namespace std;
 
@@ -43,7 +44,7 @@ int main(int argc, char** argv)
 
 	// list of root servers on humboldt using dig . NS
 	int numServers = 9;
-	string rootServer[numServers] = {  "198.41.0.4", "192.228.79.201",   "192.33.4.12",
+	string rootServer[9] = {  "198.41.0.4", "192.228.79.201",   "192.33.4.12",
 									  "128.8.10.90", "192.203.230.10",   "192.5.5.241",
 									 "192.112.36.4",    "128.63.2.53", "192.36.148.17"};
 
@@ -66,6 +67,7 @@ int main(int argc, char** argv)
 
 	// ==> start dns lookup...
 	UDPClient* client;
+	ResponseReader* reader;
 	int rootServerIndex = 0;
 	int maxTimeouts = 3;
 	int numTimeouts = 0;
@@ -77,6 +79,7 @@ int main(int argc, char** argv)
 			// if exists, need to destroy old client first??
 
 			client = new UDPClient(rootServer[rootServerIndex]);
+			reader = new ResponseReader();
 		}
 		catch (...)
 		{
@@ -91,13 +94,13 @@ int main(int argc, char** argv)
 
 		try
 		{
-			Message message = client->receiveResponse();
+			Response message = client->receiveResponse(reader);
 		}
 		catch (int status)
 		{
 			// error message from client
 			// if timeout, try again
-			if (status == 0)
+			if (status == FAILURE)
 			{
 				numTimeouts++;
 				if (numTimeouts == maxTimeouts)  // go to next root server

@@ -85,12 +85,12 @@ Response UDPClient::receiveResponse(ResponseReader* responseReader)
 	if (status < 0)
 	{
 		error("Unable to poll. \n");
-		exit(1);
+		throw FAILURE;
 	}
 	else if (status == 0)
 	{
 		error("Timeout occurred. \n");
-		exit(1);
+		throw FAILURE;
 	}
 	else
 	{
@@ -99,7 +99,7 @@ Response UDPClient::receiveResponse(ResponseReader* responseReader)
 		if(bytes < 0)
 		{
 			perror("Not enough bytes in response");
-			exit(1);
+			throw FAILURE;
 		}
 
 		debug("Received %u bytes from server \n", bytes);
