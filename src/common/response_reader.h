@@ -15,6 +15,7 @@ class ResponseReader
 {
 	private :
 		int offset;
+		void readAnswer(char*response, Response* message);
 		void readAuthoritativeAnswer(char*response, Response* message);
 		void readAdditionalAnswer(char* response, Response* message);
 	public:
