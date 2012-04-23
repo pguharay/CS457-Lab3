@@ -31,6 +31,36 @@ Response ResponseReader::read(char* response)
 	return message;
 }
 
+void ResponseReader::readAnswer(char* response, Response* message)
+{
+	for(int i=0;i<ntohs(message->header.ANCOUNT);i++)
+	{
+		int j=0;
+
+		while(*(response + offset) != '\0')
+		{
+			message->answerRR[i].NAME[j] = *(response + offset);
+			offset += 1;
+			j++;
+		}
+
+		message->answerRR[i].NAME[j] = '\0';
+
+		memcpy(&(message->answerRR[i].info), (response + offset), sizeof(RR_Info));
+		offset += sizeof(RR_Info);
+
+		for(j=0;j<ntohs(message->answerRR[i].info.RDLENGTH);j++)
+		{
+			message->answerRR[i].RDATA[j] = *(response + offset);
+			offset++;
+		}
+
+		message->answerRR[i].RDATA[j] = '\0';
+		offset += 1;
+	}
+}
+
+
 void ResponseReader::readAuthoritativeAnswer(char* response, Response* message)
 {
 	for(int i=0;i<ntohs(message->header.ARCOUNT);i++)
