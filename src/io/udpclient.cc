@@ -74,7 +74,7 @@ void UDPClient :: createNetworkDataFromMessage(Message message)
 	memcpy(&buffer[sizeof(Header) + i+1], &message.query, sizeof(Question));
 }
 
-Message UDPClient::receiveResponse()
+Response UDPClient::receiveResponse(ResponseReader* responseReader)
 {
 	char  buffer[65536];
 	//Message message;
@@ -105,26 +105,10 @@ Message UDPClient::receiveResponse()
 		debug("Received %u bytes from server \n", bytes);
 	}
 
-	return formatResponseToMessage(buffer);
+	return formatResponseToMessage(buffer, responseReader);
 }
 
-Message UDPClient::formatResponseToMessage(char* response)
+Response UDPClient::formatResponseToMessage(char* response, ResponseReader* responseReader)
 {
-	Message message;
-
-	memcpy(&message.header, response, sizeof(Header));
-
-	int i=0;
-
-	while(*(response + sizeof(Header) + i) != '\0')
-	{
-		message.QNAME[i] = *((response + sizeof(Header) + i));
-		i++;
-	}
-
-	message.QNAME[i] = '\0';
-
-	memcpy(&message.query, (response + sizeof(Header) + i+1), sizeof(Question));
-
-	return message;
+	return responseReader->read(response);
 }

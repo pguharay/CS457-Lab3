@@ -34,13 +34,18 @@ typedef struct __attribute__((packed)) query
 	uint16_t 		QCLASS;
 }Question;
 
+typedef struct __attribute__((packed)) resource_record_info
+{
+	uint16_t  		TYPE;
+	uint16_t  		CLASS;
+	uint32_t   		TTL;
+	uint16_t  		RDLENGTH;
+}RR_Info;
+
 typedef struct __attribute__((packed)) resource_record
 {
 	char 			NAME[32];
-	uint16_t  		TYPE;
-	uint16_t  		CLASS;
-	uint16_t   		TTL;
-	uint16_t  		RDLENGTH;
+	RR_Info			info;
 	char			RDATA[128];
 }RR;
 
@@ -49,13 +54,17 @@ typedef struct __attribute__((packed)) resolver_request
 	Header 		header;
 	char		QNAME[128];
 	Question	query;
-	RR 			resourceRecord;
 }Message;
 
 
 typedef struct __attribute__((packed)) resolver_response
 {
-	RR record;
+	Header 		header;
+	char		QNAME[128];
+	Question	query;
+	RR 			answerRR[20];
+	RR			authorityRR[20];
+	RR			additionalRR[20];
 }Response;
 
 typedef struct __attribute__((packed)) dnssec_rr

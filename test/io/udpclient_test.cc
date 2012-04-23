@@ -14,17 +14,21 @@ int main(int argc, char** argv)
 	}
 
 	UDPClient* client = new UDPClient(serverHost);
+	ResponseReader* reader = new ResponseReader();
 
 	Message request = prepareRequest(domainName);
 
 	client->sendRequest(request);
 
-	Message message = client->receiveResponse();
+	Response message = client->receiveResponse(reader);
 
 	printResponse(message);
+
+	delete reader;
+	delete client;
 }
 
-void printResponse(Message message)
+void printResponse(Response message)
 {
 	debug("ID = %u \n", ntohs(message.header.ID));
 	debug("QR = 0x%x \n", message.header.QR);
@@ -41,6 +45,30 @@ void printResponse(Message message)
 	debug("QNAME = %s \n", message.QNAME);
 	debug("QTYPE = %u \n", ntohs(message.query.QTYPE));
 	debug("QCLASS = %u \n", ntohs(message.query.QCLASS));
+
+	info("Authority answer = [ \n");
+
+	for(int i=0;i<ntohs(message.header.ARCOUNT);i++)
+	{
+		debug("\t Class = %u, Type = %u, Length = %u, TTL = %u \n",
+					ntohs(message.authorityRR[i].info.CLASS),
+					ntohs(message.authorityRR[i].info.TYPE),
+					ntohs(message.authorityRR[i].info.RDLENGTH),
+					ntohl(message.authorityRR[i].info.TTL));
+	}
+
+	info("] \n");
+
+	info("Additional Answer = [ \n");
+	for(int i=0;i<ntohs(message.header.NSCOUNT);i++)
+	{
+		debug("\t Class = %u, Type = %u, Length = %u, TTL = %u \n",
+					ntohs(message.additionalRR[i].info.CLASS),
+					ntohs(message.additionalRR[i].info.TYPE),
+					ntohs(message.additionalRR[i].info.RDLENGTH),
+					ntohl(message.additionalRR[i].info.TTL));
+	}
+	info("] \n");
 }
 
 Message prepareRequest(string domainName)
