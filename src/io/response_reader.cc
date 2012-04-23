@@ -27,8 +27,8 @@ Response ResponseReader::read(char* response)
 //	}
 
 	readAnswer(response, &message);
-//	readAuthoritativeAnswer(response, &message);
-//	readAdditionalAnswer(response, &message);
+	readAuthoritativeAnswer(response, &message);
+	readAdditionalAnswer(response, &message);
 
 	return message;
 }
@@ -54,11 +54,11 @@ void ResponseReader::readAnswer(char* response, Response* message)
 
 		for(j=0;j<ntohs(message->answerRR[i].info.RDLENGTH);j++)
 		{
-			message->authorityRR[i].RDATA[j] = *(response + offset);
+			message->answerRR[i].RDATA[j] = *(response + offset);
 			offset++;
 		}
 
-		message->authorityRR[i].RDATA[j] = '\0';
+		message->answerRR[i].RDATA[j] = '\0';
 		offset += 1;
 	}
 }
@@ -77,6 +77,7 @@ void ResponseReader::readAuthoritativeAnswer(char* response, Response* message)
 		}
 
 		message->authorityRR[i].NAME[j] = '\0';
+		offset += 1;
 
 		memcpy(&(message->authorityRR[i].info), (response + offset), sizeof(RR_Info));
 		offset += sizeof(RR_Info);
@@ -106,6 +107,7 @@ void ResponseReader::readAdditionalAnswer(char* response, Response* message)
 		}
 
 		message->additionalRR[i].NAME[j] = '\0';
+		offset += 1;
 
 		memcpy(&(message->additionalRR[i].info), (response + offset), sizeof(RR_Info));
 		offset += sizeof(RR_Info);
