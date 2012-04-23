@@ -62,28 +62,43 @@ void printResponse(Response message)
 
 	info("Authority answer = [ \n");
 
-	for(int i=0;i<ntohs(message.header.NSCOUNT);i++)
+	for(int i=0;i<ntohs(message.header.ARCOUNT);i++)
 	{
 		debug("\t Class = %u, Type = %u, Length = %u, TTL = %u NAME = %s\n",
 					ntohs(message.authorityRR[i].info.CLASS),
 					ntohs(message.authorityRR[i].info.TYPE),
 					ntohs(message.authorityRR[i].info.RDLENGTH),
 					ntohl(message.authorityRR[i].info.TTL),
-					message.authorityRR[i].NAME);
+					readDNSName(message.authorityRR[i].RDATA).c_str());
 	}
 
 	info("] \n");
 
 	info("Additional Answer = [ \n");
-	for(int i=0;i<ntohs(message.header.ARCOUNT);i++)
+	for(int i=0;i<ntohs(message.header.NSCOUNT);i++)
 	{
-		debug("\t Class = %u, Type = %u, Length = %u, TTL = %u \n",
+		debug("\t Class = %u, Type = %u, Length = %u, TTL = %u NAME = %s\n",
 					ntohs(message.additionalRR[i].info.CLASS),
 					ntohs(message.additionalRR[i].info.TYPE),
 					ntohs(message.additionalRR[i].info.RDLENGTH),
-					ntohl(message.additionalRR[i].info.TTL));
+					ntohl(message.additionalRR[i].info.TTL),
+					resolveRdataValue(ntohs(message.additionalRR[i].info.TYPE), message.additionalRR[i].RDATA));
 	}
 	info("] \n");
+}
+
+char* resolveRdataValue(uint16_t type, char* RDATA)
+{
+
+	if(type == 1)
+	{
+		long* ptr = (long*)RDATA;
+		sockaddr_in addr;
+		addr.sin_addr.s_addr = (*ptr);
+		return inet_ntoa(addr.sin_addr);
+	}
+
+	return RDATA;
 }
 
 Message prepareRequest(string domainName)

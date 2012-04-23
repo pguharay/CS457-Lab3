@@ -4,7 +4,6 @@
 Response ResponseReader::read(char* response)
 {
 	Response message;
-
 	// Populate Header data
 	memcpy(&message.header, response, sizeof(Header));
 
@@ -21,12 +20,6 @@ Response ResponseReader::read(char* response)
 	memcpy(&message.query, (response + sizeof(Header) + i+1), sizeof(Question));
 
 	offset = sizeof(Header) + i + 1 + sizeof(Question) + 1;
-
-	if(message.header.ANCOUNT <= 0)
-	{
-		throw FAILURE;
-	}
-
 
 	readAnswer(response, &message);
 	readAuthoritativeAnswer(response, &message);
@@ -67,7 +60,7 @@ void ResponseReader::readAnswer(char* response, Response* message)
 
 void ResponseReader::readAuthoritativeAnswer(char* response, Response* message)
 {
-	for(int i=0;i<ntohs(message->header.NSCOUNT);i++)
+	for(int i=0;i<ntohs(message->header.ARCOUNT);i++)
 	{
 		int j=0;
 
@@ -79,7 +72,6 @@ void ResponseReader::readAuthoritativeAnswer(char* response, Response* message)
 		}
 
 		message->authorityRR[i].NAME[j] = '\0';
-		offset += 1;
 
 		memcpy(&(message->authorityRR[i].info), (response + offset), sizeof(RR_Info));
 		offset += sizeof(RR_Info);
@@ -97,7 +89,7 @@ void ResponseReader::readAuthoritativeAnswer(char* response, Response* message)
 
 void ResponseReader::readAdditionalAnswer(char* response, Response* message)
 {
-	for(int i=0;i<ntohs(message->header.ARCOUNT);i++)
+	for(int i=0;i<ntohs(message->header.NSCOUNT);i++)
 	{
 		int j=0;
 
@@ -109,7 +101,6 @@ void ResponseReader::readAdditionalAnswer(char* response, Response* message)
 		}
 
 		message->additionalRR[i].NAME[j] = '\0';
-		offset += 1;
 
 		memcpy(&(message->additionalRR[i].info), (response + offset), sizeof(RR_Info));
 		offset += sizeof(RR_Info);

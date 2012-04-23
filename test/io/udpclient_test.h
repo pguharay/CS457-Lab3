@@ -9,5 +9,6 @@ string formatDNSName(string domainName);
 Message prepareRequest(string domainName);
 void printResponse(Response message);
 string readDNSName(char* dnsName);
+char* resolveRdataValue(uint16_t type, char* RDATA);
 
 #endif
