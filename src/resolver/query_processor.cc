@@ -13,8 +13,11 @@
 QueryProcessor::QueryProcessor() {}
 
 
+
+
 Message QueryProcessor::getDnsQuery(char* hostAddress)
 {
+	validateHostname(hostAddress);
 	Message request;
 
 	Header header = createMessageHeader();
@@ -96,5 +99,21 @@ string QueryProcessor::formatDNSName(string domainName)
 }
 
 
+void QueryProcessor::validateHostname(char* domainName){
+	string sName = string(domainName);
 
+	//check if the host has at least 3 periods...
+	int period_count=0;
+	for(uint i=0; i < sName.size(); i++){
+		if(sName[i] == '.') period_count++;
+	}
+
+	if(period_count < 3){
+		perror("Invlalid hostname.");
+		exit;
+	}
+
+
+
+}
 

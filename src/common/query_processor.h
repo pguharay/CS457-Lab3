@@ -17,6 +17,7 @@ class QueryProcessor
 		string 		createQName(string domainName);
 		Header 		createMessageHeader();
 		string 		formatDNSName(string domainName);
+		void 		validateHostname(char* domainName);
 };
 
 #endif
