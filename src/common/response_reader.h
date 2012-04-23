@@ -18,7 +18,6 @@ class ResponseReader
 		void readAnswer(char*response, Response* message);
 		void readAuthoritativeAnswer(char*response, Response* message);
 		void readAdditionalAnswer(char* response, Response* message);
-		void readAnswer(char* response, Response* message);
 	public:
 		Response read(char* response);
 };
