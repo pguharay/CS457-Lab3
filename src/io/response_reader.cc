@@ -20,11 +20,7 @@ Response ResponseReader::read(char* response)
 
 	offset = sizeof(Header) + i + 1 + sizeof(Question) + 1;
 
-	for(int i=0;i<ntohs(message.header.ANCOUNT);i++)
-	{
-		//info("answer \n");
-	}
-
+	readAnswer(response, &message);
 	readAuthoritativeAnswer(response, &message);
 	readAdditionalAnswer(response, &message);
 
