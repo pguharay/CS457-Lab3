@@ -8,5 +8,6 @@
 string formatDNSName(string domainName);
 Message prepareRequest(string domainName);
 void printResponse(Response message);
+string readDNSName(char* dnsName);
 
 #endif

@@ -42,19 +42,33 @@ void printResponse(Response message)
 	debug("ANCount = %u \n", ntohs(message.header.ANCOUNT));
 	debug("ARCount = %u \n", ntohs(message.header.ARCOUNT));
 	debug("NSCount = %u \n", ntohs(message.header.NSCOUNT));
-	debug("QNAME = %s \n", message.QNAME);
+	debug("QNAME = %s \n", readDNSName(message.QNAME).c_str());
 	debug("QTYPE = %u \n", ntohs(message.query.QTYPE));
 	debug("QCLASS = %u \n", ntohs(message.query.QCLASS));
+
+	info("Answer = [ \n");
+
+	for(int i=0;i<ntohs(message.header.ANCOUNT);i++)
+	{
+		debug("\t Class = %u, Type = %u, Length = %u, TTL = %u \n",
+					ntohs(message.answerRR[i].info.CLASS),
+					ntohs(message.answerRR[i].info.TYPE),
+					ntohs(message.answerRR[i].info.RDLENGTH),
+					ntohl(message.answerRR[i].info.TTL));
+	}
+
+	info("]\n");
 
 	info("Authority answer = [ \n");
 
 	for(int i=0;i<ntohs(message.header.ARCOUNT);i++)
 	{
-		debug("\t Class = %u, Type = %u, Length = %u, TTL = %u \n",
+		debug("\t Class = %u, Type = %u, Length = %u, TTL = %u NAME = %s\n",
 					ntohs(message.authorityRR[i].info.CLASS),
 					ntohs(message.authorityRR[i].info.TYPE),
 					ntohs(message.authorityRR[i].info.RDLENGTH),
-					ntohl(message.authorityRR[i].info.TTL));
+					ntohl(message.authorityRR[i].info.TTL),
+					readDNSName(message.authorityRR[i].NAME).c_str());
 	}
 
 	info("] \n");
@@ -107,6 +121,27 @@ Message prepareRequest(string domainName)
 	request.query = question;
 
 	return request;
+}
+
+string readDNSName(char* dnsName)
+{
+	string name;
+	int i=0;
+
+	while(*(dnsName + i) != '\0')
+	{
+		int count = *(dnsName + i);
+
+		for(int j=1;j<=count;j++)
+		{
+			name.push_back(*(dnsName + i + j));
+		}
+
+		name.push_back('.');
+		i =  i + count + 1;
+	}
+
+	return name.substr(0, name.length()-1);
 }
 
 string formatDNSName(string domainName)
