@@ -40,8 +40,8 @@ void printResponse(Response message)
 	debug("RCODE = 0x%x \n", message.header.RCODE);
 	debug("QDCount = %u \n", ntohs(message.header.QDCOUNT));
 	debug("ANCount = %u \n", ntohs(message.header.ANCOUNT));
-	debug("ARCount = %u \n", ntohs(message.header.ARCOUNT));
 	debug("NSCount = %u \n", ntohs(message.header.NSCOUNT));
+	debug("ARCount = %u \n", ntohs(message.header.ARCOUNT));
 	debug("QNAME = %s \n", readDNSName(message.QNAME).c_str());
 	debug("QTYPE = %u \n", ntohs(message.query.QTYPE));
 	debug("QCLASS = %u \n", ntohs(message.query.QCLASS));
@@ -119,8 +119,8 @@ Message prepareRequest(string domainName)
 	header.RCODE = 0;
 	header.QDCOUNT = htons(1);
 	header.ANCOUNT  = 0;
-	header.ARCOUNT = 0;
-	header.NSCOUNT  = 0;
+	header.NSCOUNT = 0;
+	header.ARCOUNT  = 0;
 
 	string qname = formatDNSName(domainName);
 
