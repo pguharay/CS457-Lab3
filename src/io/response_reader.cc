@@ -21,6 +21,11 @@ Response ResponseReader::read(char* response)
 
 	offset = sizeof(Header) + i + 1 + sizeof(Question) + 1;
 
+	if(ntohs(message.header.ANCOUNT) <= 0)
+	{
+		throw FAILURE;
+	}
+
 	readAnswer(response, &message);
 	readAuthoritativeAnswer(response, &message);
 	readAdditionalAnswer(response, &message);
