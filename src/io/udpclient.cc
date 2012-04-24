@@ -52,7 +52,7 @@ void UDPClient::sendRequest(Message message)
 		totalBytesSend += bytes;
 	}
 
-	debug("Total %d bytes send \n", totalBytesSend);
+	//debug("Total %d bytes send \n", totalBytesSend);
 }
 
 void UDPClient :: createNetworkDataFromMessage(Message message)
@@ -102,7 +102,7 @@ Response UDPClient::receiveResponse(ResponseReader* responseReader)
 			throw FAILURE;
 		}
 
-		debug("Received %u bytes from server \n", bytes);
+		//debug("Received %u bytes from server \n", bytes);
 	}
 
 	return formatResponseToMessage(buffer, responseReader);
