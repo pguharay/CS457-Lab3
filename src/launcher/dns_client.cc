@@ -104,7 +104,7 @@ void printResponse(Response message)
 
 	info("Authority answer = [ \n");
 
-	for(int i=0;i<ntohs(message.header.ARCOUNT);i++)
+	for(int i=0;i<ntohs(message.header.NSCOUNT);i++)
 	{
 		debug("\t Class = %u, Type = %u, Length = %u, TTL = %u NAME = %s\n",
 					ntohs(message.authorityRR[i].info.CLASS),
@@ -117,7 +117,7 @@ void printResponse(Response message)
 	info("] \n");
 
 	info("Additional Answer = [ \n");
-	for(int i=0;i<ntohs(message.header.NSCOUNT);i++)
+	for(int i=0;i<ntohs(message.header.ARCOUNT);i++)
 	{
 		debug("\t Class = %u, Type = %u, Length = %u, TTL = %u NAME = %s\n",
 					ntohs(message.additionalRR[i].info.CLASS),
