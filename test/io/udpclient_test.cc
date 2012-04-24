@@ -97,6 +97,21 @@ char* resolveRdataValue(uint16_t type, char* RDATA)
 		addr.sin_addr.s_addr = (*ptr);
 		return inet_ntoa(addr.sin_addr);
 	}
+	else if (type == 0x1c)
+	{
+		unsigned char data[16];
+		char str[INET6_ADDRSTRLEN];
+		strcpy((char*)data, RDATA);
+		int i = 0;
+		for (i;i<16;i++)
+		{
+			data[i] = (char)*(RDATA + i);
+		}
+		sockaddr_in6 addr;
+		memcpy(&addr.sin6_addr.s6_addr, RDATA, 16);
+		inet_ntop(AF_INET6, &(addr.sin6_addr), str, INET6_ADDRSTRLEN);
+		return str;
+	}
 
 	return RDATA;
 }
