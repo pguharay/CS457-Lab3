@@ -24,8 +24,8 @@ typedef struct __attribute__((packed)) request_header
 
 	uint16_t 		  QDCOUNT;		//an unsigned 16 bit integer specifying the number of entries in the question section
 	uint16_t 		  ANCOUNT;		//an unsigned 16 bit integer specifying the number of resource records in the answer section
-	uint16_t 		  ARCOUNT;		//an unsigned 16 bit integer specifying the number of name server resource records in the authority records section
-	uint16_t 		  NSCOUNT;		//an unsigned 16 bit integer specifying the number of resource records in the additional records section
+	uint16_t 		  NSCOUNT;		//an unsigned 16 bit integer specifying the number of name server resource records in the authority records section
+	uint16_t 		  ARCOUNT;		//an unsigned 16 bit integer specifying the number of resource records in the additional records section
 }Header;
 
 typedef struct __attribute__((packed)) query

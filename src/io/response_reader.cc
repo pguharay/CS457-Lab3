@@ -60,7 +60,7 @@ void ResponseReader::readAnswer(char* response, Response* message)
 
 void ResponseReader::readAuthoritativeAnswer(char* response, Response* message)
 {
-	for(int i=0;i<ntohs(message->header.ARCOUNT);i++)
+	for(int i=0;i<ntohs(message->header.NSCOUNT);i++)
 	{
 		int j=0;
 
@@ -89,7 +89,7 @@ void ResponseReader::readAuthoritativeAnswer(char* response, Response* message)
 
 void ResponseReader::readAdditionalAnswer(char* response, Response* message)
 {
-	for(int i=0;i<ntohs(message->header.NSCOUNT);i++)
+	for(int i=0;i<ntohs(message->header.ARCOUNT);i++)
 	{
 		int j=0;
 
