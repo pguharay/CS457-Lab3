@@ -11,10 +11,12 @@ class QueryProcessor
 	public:
 		QueryProcessor();
 		Message getDnsQuery(char* hostAddress);
-		char* getDnsNameFormat(char* hostAddress);
 
 	private:
-		uint16_t getRandomId();
+		Question 	createQuestion();
+		string 		createQName(string domainName);
+		Header 		createMessageHeader();
+		string 		formatDNSName(string domainName);
 };
 
 #endif

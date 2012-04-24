@@ -21,6 +21,11 @@ Response ResponseReader::read(char* response)
 
 	offset = sizeof(Header) + i + 1 + sizeof(Question) + 1;
 
+	if(ntohs(message.header.ANCOUNT) <= 0)
+	{
+		//throw FAILURE;
+	}
+
 	readAnswer(response, &message);
 	readAuthoritativeAnswer(response, &message);
 	readAdditionalAnswer(response, &message);
@@ -42,7 +47,7 @@ void ResponseReader::readAnswer(char* response, Response* message)
 		}
 
 		message->answerRR[i].NAME[j] = '\0';
-		offset += 1;
+		//offset += 1;
 
 		memcpy(&(message->answerRR[i].info), (response + offset), sizeof(RR_Info));
 		offset += sizeof(RR_Info);
