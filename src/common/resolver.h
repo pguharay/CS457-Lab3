@@ -1,5 +1,5 @@
-#include <iostream>
-#include "dns.h"
+#include "response_reader.h"
+#include "io.h"
 
 using namespace std;
 
@@ -8,8 +8,13 @@ using namespace std;
 
 class Resolver
 {
+	private:
+		UDPClient* udpClient;
+		ResponseReader* responseReader;
+		string nextNameServer(Response response);
+		char* resolveRdataValue(uint16_t type, char* RDATA);
 	public:
-		Resolver(string rootServer[5]);
+		Resolver(ResponseReader* reader);
 		Response queryNameServer(string nameserver, Message req);
 };
 

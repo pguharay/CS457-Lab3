@@ -5,6 +5,7 @@
 #include "../common/query_processor.h"
 #include "../common/io.h"
 #include "../common/util.h"
+#include "../common/resolver.h"
 
 using namespace std;
 
@@ -164,7 +165,7 @@ int main(int argc, char** argv)
 	//int numTimeouts = 0;
 	bool queryCompleted = false;
 
-	UDPClient* client = new UDPClient(rootServer[rootServerIndex]);
+	Resolver* resolver;
 	ResponseReader* reader = new ResponseReader();
 	Response message;
 
@@ -173,8 +174,10 @@ int main(int argc, char** argv)
 		try
 		{
 			// if exists, need to destroy old client first??
-			client->sendRequest(queryMessage);
-			message = client->receiveResponse(reader);
+			//client->sendRequest(queryMessage);
+			//message = client->receiveResponse(reader);
+			resolver = new Resolver(reader);
+			message = resolver->queryNameServer(rootServer[rootServerIndex], queryMessage);
 		}
 		catch (...)
 		{
@@ -213,6 +216,9 @@ int main(int argc, char** argv)
 		queryCompleted = true;  // set if no further queries
 	}
 
+
+	delete reader;
+	delete resolver;
 /*
 	// for testing...
 	entries = new const char*[2];

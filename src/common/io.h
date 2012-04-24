@@ -12,7 +12,6 @@
 #include <string.h>
 #include <string>
 #include <fstream>
-#include "resolver.h"
 #include "util.h"
 #include "response_reader.h"
 
