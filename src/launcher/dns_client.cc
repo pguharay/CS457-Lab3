@@ -132,7 +132,7 @@ void publishRRData(Response message)
 		else if (ntohs(message.answerRR[i].info.TYPE) == RRSIG_QTYPE)
 		{
 			RRSIG rrsigData;
-			memcpy(&rrsigData, message.answerRR[i].RDATA, 144);
+			memcpy(&rrsigData, message.answerRR[i].RDATA, sizeof(RRSIG));
 
 			// for debug
 			printf("\n(Answer %i is RRSIG, Type covered =  %i, rdata length = %i)", i, ntohs(rrsigData.type_covered), ntohs(message.answerRR[i].info.RDLENGTH));
@@ -409,11 +409,11 @@ int main(int argc, char** argv)
 		//==> submit new queries if needed
 
 		// for test, let's hit all the servers
-		rootServerIndex++;
-		if (rootServerIndex == numServers)
+		//rootServerIndex++;
+		//if (rootServerIndex == numServers)
 			queryCompleted = true;  // set if no further queries
-		else
-			currentServer = rootServer[rootServerIndex];
+		//else
+		//	currentServer = rootServer[rootServerIndex];
 	}
 
 /*
