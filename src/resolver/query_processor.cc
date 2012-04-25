@@ -37,7 +37,7 @@ Message QueryProcessor::getDnsQuery(char* hostAddress)
 Question QueryProcessor::createQuestion()
 {
 	Question question;
-	question.QTYPE = htons(38);
+	question.QTYPE = htons(255);  //rm:  AAAA = 28, ANY = 255
 	question.QCLASS = htons(1);
 
 	return question;
@@ -58,7 +58,7 @@ Header QueryProcessor::createMessageHeader()
 	header.OPCODE = 0;
 	header.AA = 0;
 	header.TC = 0;
-	header.RD = htons(1);
+	header.RD = htons(0);  //rm: should not be recursive per assignment directions
 	header.RA = 0;
 	header.reserved_1  = 0;
 	header.reserved_2  = 0;
@@ -110,7 +110,7 @@ void QueryProcessor::validateHostname(char* domainName){
 
 	if(period_count < 3){
 		perror("Invlalid hostname.");
-		exit;
+	//	exit;
 	}
 
 

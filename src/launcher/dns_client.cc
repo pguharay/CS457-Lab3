@@ -9,31 +9,16 @@
 
 using namespace std;
 
+#define AAAA_QTYPE 28
+#define RRSIG_QTYPE 46
+#define CNAME_QTYPE 5
+#define NSEC_QTYPE 47
+
+
 void showUsageandExit()
 {
 	printf("\nUsage:  dns_resolver <URL>\n");
 	exit(-1);
-}
-
-void printResults(char* hostname, int numAddresses, const char** addresses)
-{
-	if (numAddresses == 0)
-	{
-		printf("\nNo IPv6 addresses found for %s\n\n", hostname);
-	}
-	else
-	{
-		printf("\n");
-		printf("%i IPv6 address", numAddresses);
-		if (numAddresses > 1)
-			printf("es");
-		printf(" found for %s:\n", hostname);
-
-		for (int i=0; i<numAddresses; i++)
-			printf("\n%s", addresses[i]);
-
-		printf("\n");
-	}
 }
 
 string readDNSName(char* dnsName)
@@ -57,9 +42,145 @@ string readDNSName(char* dnsName)
 	return name.substr(0, name.length()-1);
 }
 
+typedef struct __attribute__((packed)) ipv6_address {
+        uint16_t  segments[8];  // total 128 bits
+}IPv6Address;
+
+void printAAAA(char* name, int TTL, int qclass, char* ipv6AddressData)
+{
+	printf("\n");
+	printf("%s ", name);
+	printf("%i ", TTL);
+	if (qclass == 1)
+		printf("IN ");
+	else
+		printf("Class%i ", qclass);
+	printf("AAAA ");
+
+	IPv6Address address;
+	memcpy(&address, ipv6AddressData, sizeof(IPv6Address));
+
+	for (int i=0; i<8; i++)
+	{
+		printf("%x", ntohs(address.segments[i]));
+		if (i < 7)
+			printf(":");
+	}
+}
+
+void printRRSIG(char* name, int TTL, int qclass, RRSIG rrsig)
+{
+	printf("\n");
+	printf("%s ", name);
+	printf("%i ", TTL);
+	if (qclass == 1)
+		printf("IN ");
+	else
+		printf("Class%i ", qclass);
+	printf("RRSIG ");
+
+	// print RDATA
+	int type_covered = ntohs(rrsig.type_covered);
+	if (type_covered == AAAA_QTYPE)
+		printf("AAAA ");
+	else if (type_covered == NSEC_QTYPE)
+		printf("NSEC ");
+	else
+		printf("TYPE%i ", type_covered);
+	printf("%i ", rrsig.algorithm);
+	printf("%i ", rrsig.labels);
+	printf("%i ", ntohl(rrsig.original_TTL));
+	printf("%i ", ntohl(rrsig.signature_expiration));
+	printf("%i ", ntohl(rrsig.signature_inception));
+	printf("%i ", ntohs(rrsig.key_tag));
+	printf("%s ", readDNSName(rrsig.signer).c_str());
+	printf("%s ", rrsig.signature);
+}
+
+void printCNAME(RR rr)
+{
+	printf("\n");
+	printf("%s ", rr.NAME);
+	printf("%i ", ntohl(rr.info.TTL));
+
+	int qclass = ntohs(rr.info.CLASS);
+	if ( qclass == 1)
+		printf("IN ");
+	else
+		printf("Class%i ", qclass);
+
+	printf("CNAME ");
+	printf("%s ", readDNSName(rr.RDATA).c_str());
+
+}
+
+void publishRRData(Response message)
+{
+	int numAnswers = ntohs(message.header.ANCOUNT);
+	// for debug
+	printf("\nProcessing %i answers\n",numAnswers);
+
+	for(int i=0;i<numAnswers;i++)
+	{
+		if (ntohs(message.answerRR[i].info.TYPE) == AAAA_QTYPE)
+		{
+			// for debug
+			printf("\n(Answer %i is AAAA, rdata length = %i)", i, ntohs(message.answerRR[i].info.RDLENGTH));
+
+			printAAAA(message.answerRR[i].NAME, ntohl(message.answerRR[i].info.TTL), ntohs(message.answerRR[i].info.CLASS), message.answerRR[i].RDATA);
+		}
+		else if (ntohs(message.answerRR[i].info.TYPE) == RRSIG_QTYPE)
+		{
+			RRSIG rrsigData;
+			memcpy(&rrsigData, message.answerRR[i].RDATA, 144);
+
+			// for debug
+			printf("\n(Answer %i is RRSIG, Type covered =  %i, rdata length = %i)", i, ntohs(rrsigData.type_covered), ntohs(message.answerRR[i].info.RDLENGTH));
+
+			// Type covered must match AAAA
+			if (ntohs(rrsigData.type_covered) == AAAA_QTYPE)
+				printRRSIG(message.answerRR[i].NAME, ntohl(message.answerRR[i].info.TTL), ntohs(message.answerRR[i].info.CLASS), rrsigData);
+		}
+		else if (ntohs(message.answerRR[i].info.TYPE) == CNAME_QTYPE)
+		{
+			// for debug
+			printf("\n(Answer %i is CNAME,  rdata length = %i)", i, ntohs(message.answerRR[i].info.RDLENGTH));
+
+			printCNAME(message.answerRR[i]);
+		}
+		else
+		{
+			// for debug
+			printf("\n(Answer %i is Type %i,  rdata length = %i)", i, ntohs(message.answerRR[i].info.TYPE), ntohs(message.answerRR[i].info.RDLENGTH));
+		}
+
+	}
+}
+
+void printResults(char* hostname, int numAddresses, const char** addresses)
+{
+	if (numAddresses == 0)
+	{
+		printf("\nNo IPv6 addresses found for %s\n\n", hostname);
+	}
+	else
+	{
+		printf("\n");
+		printf("%i IPv6 address", numAddresses);
+		if (numAddresses > 1)
+			printf("es");
+		printf(" found for %s:\n", hostname);
+
+		for (int i=0; i<numAddresses; i++)
+			printf("\n%s", addresses[i]);
+
+		printf("\n");
+	}
+}
+
+
 char* resolveRdataValue(uint16_t type, char* RDATA)
 {
-
 	if(type == 1)
 	{
 		long* ptr = (long*)RDATA;
@@ -67,7 +188,6 @@ char* resolveRdataValue(uint16_t type, char* RDATA)
 		addr.sin_addr.s_addr = (*ptr);
 		return inet_ntoa(addr.sin_addr);
 	}
-
 	return RDATA;
 }
 
@@ -133,14 +253,14 @@ void printResponse(Response message)
 int main(int argc, char** argv)
 {
 	char* hostName = NULL;
-	//int nAddresses = 0;
-	//const char** entries;
+	int nAddresses = 0;
+	const char** entries;
 
 	// list of root servers on humboldt using dig . NS
 	int numServers = 9;
-	string rootServer[9] = {"198.41.0.4", "192.228.79.201",   "192.33.4.12",
-									  "128.8.10.90", "192.203.230.10",   "192.5.5.241",
-									 "192.112.36.4",    "128.63.2.53", "192.36.148.17"};
+	string rootServer[9] = {  "198.41.0.4", "192.228.79.201",   "192.33.4.12",
+	                         "128.8.10.90", "192.203.230.10",   "192.5.5.241",
+	                        "192.112.36.4",    "128.63.2.53", "192.36.148.17"};
 
 
 	// == parse command line arguments ==
@@ -149,47 +269,56 @@ int main(int argc, char** argv)
 
 	hostName = argv[1];
 
-	//JE: using this code to test...
-	QueryProcessor* qp = new QueryProcessor();
-	//qp->getDnsNameFormat((char*)hostName);
-
-
-	// ==> do some checking to verify valid hostname - in query processor?
-
 	// == create query ==
+	QueryProcessor* qp = (QueryProcessor*)malloc(sizeof(QueryProcessor));
 	Message queryMessage = qp->getDnsQuery(hostName);
 
 	// ==> start dns lookup...
+	UDPClient* client;
+	ResponseReader* reader;
 	int rootServerIndex = 0;
-	//int maxTimeouts = 3;
-	//int numTimeouts = 0;
+	string currentServer = rootServer[rootServerIndex];
+	int maxTimeouts = 3;
+	int numTimeouts = 0;
 	bool queryCompleted = false;
-
-	Resolver* resolver;
-	ResponseReader* reader = new ResponseReader();
-	Response message;
 
 	while (!queryCompleted)
 	{
+		// == set up UDP client ==
 		try
 		{
 			// if exists, need to destroy old client first??
-			//client->sendRequest(queryMessage);
-			//message = client->receiveResponse(reader);
-			resolver = new Resolver(reader);
-			message = resolver->queryNameServer(rootServer[rootServerIndex], queryMessage);
+			printf("\n >>> Sending query to: %s\n", currentServer.c_str());
+
+			client = new UDPClient(currentServer);
+			reader = new ResponseReader();
 		}
 		catch (...)
 		{
 			rootServerIndex++;
 			if (rootServerIndex == numServers)
 				break;
+			else
+				currentServer = rootServer[rootServerIndex];
 
 			continue;
 		}
-		/*catch (int status)
+
+		// == send request ==
+		client->sendRequest(queryMessage);
+
+
+		// == get Response ==
+		Response message;
+		try
 		{
-			// error message from client
+			message = client->receiveResponse(reader);
+		}
+		catch (int status)
+		{
+			delete reader;
+			delete client;
+
 			// if timeout, try again
 			if (status == FAILURE)
 			{
@@ -200,25 +329,93 @@ int main(int argc, char** argv)
 					rootServerIndex++;
 					if (rootServerIndex == numServers)
 						break;
+					else
+						currentServer = rootServer[rootServerIndex];
 				}
-
 				continue;
 			}
 		}
-		 */
+		catch (...)
+		{
+			printf("Error reading message.");
+		}
+		delete reader;
+		delete client;
 
-		//==>parse message
+		// for debug
+		printResponse(message);
+
+
+		// == process Response ==
+
+		// check if message is authoritative
+		bool referralFound = false;
+		if (message.header.AA == 0)  // not authoritative so get referral IP
+		{
+			for(int i=0;i<ntohs(message.header.NSCOUNT);i++)
+			{
+				if (ntohs(message.additionalRR[i].info.TYPE) == 1)
+				{
+					long* ptr = (long*)message.additionalRR[i].RDATA;
+					sockaddr_in addr;
+					addr.sin_addr.s_addr = (*ptr);
+					currentServer = inet_ntoa(addr.sin_addr);
+
+					// for debug
+					printf("\nNot Authoritative Server - referred to: %s\n", currentServer.c_str());
+					referralFound = true;
+//					break;
+				}
+			}
+
+			if (referralFound)
+				continue;
+			else
+				printf("\nError finding referral server\n");
+		}
+		else
+		{
+			// for debug
+			printf("\n\n%s Is Authoritative Server\n", currentServer.c_str());
+			printf("\n============================================\n");
+
+			// check answer RRs
+			int numAnswers = ntohs(message.header.ANCOUNT);
+			if (numAnswers > 0)
+			{
+				publishRRData(message);
+			}
+			else
+			{
+				// for debug
+				printf("\nNo Answers found\n");
+				printf("\n============================================\n");
+
+				// try next root server
+				rootServerIndex++;
+				if (rootServerIndex == numServers)
+					break;
+				else
+					currentServer = rootServer[rootServerIndex];
+
+				continue;
+			}
+
+			// for debug
+			printf("\n============================================\n");
+		}
 
 
 		//==> submit new queries if needed
 
-
-		queryCompleted = true;  // set if no further queries
+		// for test, let's hit all the servers
+		rootServerIndex++;
+		if (rootServerIndex == numServers)
+			queryCompleted = true;  // set if no further queries
+		else
+			currentServer = rootServer[rootServerIndex];
 	}
 
-
-	delete reader;
-	delete resolver;
 /*
 	// for testing...
 	entries = new const char*[2];
@@ -230,14 +427,5 @@ int main(int argc, char** argv)
 	// == print results ==
 	printResults(hostName, nAddresses, entries);
 */
-	if(queryCompleted)
-	{
-		printResponse(message);
-	}
-	else
-	{
-		info("Name could not be resolved \n");
-	}
-
 	return 1;
 }
