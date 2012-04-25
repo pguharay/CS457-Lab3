@@ -13,19 +13,20 @@ int main(int argc, char** argv)
 		exit(1);
 	}
 
-	UDPClient* client = new UDPClient(serverHost);
+	//UDPClient* client = new UDPClient(serverHost);
 	ResponseReader* reader = new ResponseReader();
-
+	Resolver* resolver = new Resolver(reader);
 	Message request = prepareRequest(domainName);
 
-	client->sendRequest(request);
+	Response message = resolver->queryNameServer(serverHost, request);
+	//client->sendRequest(request);
 
-	Response message = client->receiveResponse(reader);
+	//Response message = client->receiveResponse(reader);
 
 	printResponse(message);
 
 	delete reader;
-	delete client;
+	delete resolver;
 }
 
 void printResponse(Response message)
@@ -103,7 +104,7 @@ char* resolveRdataValue(uint16_t type, char* RDATA)
 		char str[INET6_ADDRSTRLEN];
 		strcpy((char*)data, RDATA);
 		int i = 0;
-		for (i;i<16;i++)
+		for (;i<16;i++)
 		{
 			data[i] = (char)*(RDATA + i);
 		}
@@ -140,7 +141,7 @@ Message prepareRequest(string domainName)
 	string qname = formatDNSName(domainName);
 
 	Question question;
-	question.QTYPE = htons(38);
+	question.QTYPE = htons(255);
 	question.QCLASS = htons(1);
 
 	Message request;

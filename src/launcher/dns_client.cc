@@ -6,6 +6,7 @@
 #include "../common/io.h"
 #include "../common/util.h"
 #include "../common/resolver.h"
+#include "../common/codec.h"
 
 using namespace std;
 
@@ -94,7 +95,10 @@ void printRRSIG(char* name, int TTL, int qclass, RRSIG rrsig)
 	printf("%i ", ntohl(rrsig.signature_inception));
 	printf("%i ", ntohs(rrsig.key_tag));
 	printf("%s ", readDNSName(rrsig.signer).c_str());
-	printf("%s ", rrsig.signature);
+
+	string signature(rrsig.signature);
+
+	printf("%s ", base64_encode(reinterpret_cast<const unsigned char*>(signature.c_str()), signature.length()).c_str());
 }
 
 void printCNAME(RR rr)

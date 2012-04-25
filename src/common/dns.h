@@ -46,7 +46,7 @@ typedef struct __attribute__((packed)) resource_record
 {
 	char 			NAME[32];
 	RR_Info			info;
-	char			RDATA[128];
+	char			RDATA[1024];
 }RR;
 
 typedef struct __attribute__((packed)) resolver_request
@@ -84,8 +84,8 @@ typedef struct __attribute__((packed)) rrsig_rr
 	uint32_t 		signature_expiration;
 	uint32_t 		signature_inception;
 	uint16_t        key_tag;
-	char 			signer[256];
-	char 			signature[256];
+	char 			signer[64];
+	char 			signature[512];
 }RRSIG;
 
 

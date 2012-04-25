@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include "../../src/common/io.h"
 #include "../../src/common/response_reader.h"
+#include "../../src/common/resolver.h"
 
 #ifndef UDPCLIENT_TEST_H_
 #define UDPCLIENT_TEST_H_

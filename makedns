@@ -1,5 +1,5 @@
 EXECUTABLE = myresolver
-DEPENDENCY = ./obj/dns.o ./obj/query_resolver.o  ./obj/response_reader.o ./obj/udp_client.o 
+DEPENDENCY = ./obj/dns.o ./obj/query_resolver.o  ./obj/response_reader.o ./obj/udp_client.o ./obj/codec.o
 CC = g++ 
 CCFLAGS= -Wall -c -g
 OBJ_DIR=obj
@@ -9,8 +9,6 @@ EXE_DIR=build
 $(EXECUTABLE) : $(DEPENDENCY)
 	$(CC) $(DEPENDENCY) -o $(EXECUTABLE)
 
-#./obj/resolver.o : ./$(SRC_DIR)/resolver/resolver.cc ./$(SRC_DIR)/common/resolver.h
-#	$(CC) $(CCFLAGS) ./$(SRC_DIR)/resolver/resolver.cc -o ./$(OBJ_DIR)/resolver.o
  
 ./obj/response_reader.o : ./$(SRC_DIR)/io/response_reader.cc ./$(SRC_DIR)/common/response_reader.h
 	$(CC) $(CCFLAGS) ./$(SRC_DIR)/io/response_reader.cc -o ./$(OBJ_DIR)/response_reader.o
@@ -20,4 +18,5 @@ $(EXECUTABLE) : $(DEPENDENCY)
 	$(CC) $(CCFLAGS) ./$(SRC_DIR)/launcher/dns_client.cc -o ./$(OBJ_DIR)/dns.o
 ./obj/query_resolver.o : ./$(SRC_DIR)/common/query_processor.h 
 	$(CC) $(CCFLAGS) ./$(SRC_DIR)/resolver/query_processor.cc -o ./$(OBJ_DIR)/query_resolver.o
- 	
+./obj/codec.o : ./$(SRC_DIR)/resolver/codec.cc ./$(SRC_DIR)/common/codec.h
+	$(CC) $(CCFLAGS) ./$(SRC_DIR)/resolver/codec.cc -o ./$(OBJ_DIR)/codec.o
