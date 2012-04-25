@@ -98,7 +98,7 @@ void printRRSIG(char* name, int TTL, int qclass, RRSIG rrsig)
 
 	string signature(rrsig.signature);
 
-	printf("%s ", base64_encode(reinterpret_cast<const unsigned char*>(signature.c_str()), signature.length()).c_str());
+	printf("%s ", encode(reinterpret_cast<const unsigned char*>(signature.c_str()), signature.length()).c_str());
 }
 
 void printCNAME(RR rr)

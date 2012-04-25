@@ -5,7 +5,7 @@ using namespace std;
 #ifndef CODEC_H_
 #define CODEC_H_
 
-string base64_encode(unsigned char const* , unsigned int len);
-
+string encode(unsigned char const* rawBinaryData, unsigned int dataLength);
+void mapBinaryToAscii(unsigned char* binaryBlock,  unsigned char* asciiBlock);
 
 #endif

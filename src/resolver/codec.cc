@@ -8,47 +8,59 @@ const string base64_chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
 
 
-string base64_encode(unsigned char const* bytes_to_encode, unsigned int in_len) {
-  std::string ret;
+string encode(unsigned char const* rawBinaryData, unsigned int dataLength)
+{
+  string encodedString;
   int i = 0;
   int j = 0;
-  unsigned char char_array_3[3];
-  unsigned char char_array_4[4];
+  unsigned char binaryBlock[3];
+  unsigned char asciiBlock[4];
 
-  while (in_len--) {
-    char_array_3[i++] = *(bytes_to_encode++);
-    if (i == 3) {
-      char_array_4[0] = (char_array_3[0] & 0xfc) >> 2;
-      char_array_4[1] = ((char_array_3[0] & 0x03) << 4) + ((char_array_3[1] & 0xf0) >> 4);
-      char_array_4[2] = ((char_array_3[1] & 0x0f) << 2) + ((char_array_3[2] & 0xc0) >> 6);
-      char_array_4[3] = char_array_3[2] & 0x3f;
+  while (dataLength--)
+  {
+	  binaryBlock[i++] = *(rawBinaryData++);
 
-      for(i = 0; (i <4) ; i++)
-        ret += base64_chars[char_array_4[i]];
-      i = 0;
+    if (i == 3)
+    {
+
+    	mapBinaryToAscii(binaryBlock, asciiBlock);
+
+		for(i = 0; (i <4) ; i++)
+		{
+		  encodedString += base64_chars[asciiBlock[i]];
+		}
+		i = 0;
+
     }
   }
 
   if (i)
   {
     for(j = i; j < 3; j++)
-      char_array_3[j] = '\0';
+    {
+    	binaryBlock[j] = '\0';
+    }
 
-    char_array_4[0] = (char_array_3[0] & 0xfc) >> 2;
-    char_array_4[1] = ((char_array_3[0] & 0x03) << 4) + ((char_array_3[1] & 0xf0) >> 4);
-    char_array_4[2] = ((char_array_3[1] & 0x0f) << 2) + ((char_array_3[2] & 0xc0) >> 6);
-    char_array_4[3] = char_array_3[2] & 0x3f;
+    mapBinaryToAscii(binaryBlock, asciiBlock);
 
     for (j = 0; (j < i + 1); j++)
-      ret += base64_chars[char_array_4[j]];
+    {
+    	encodedString += base64_chars[asciiBlock[j]];
+    }
 
     while((i++ < 3))
-      ret += '=';
+    	encodedString += '=';
 
   }
 
-  return ret;
+  return encodedString;
 }
 
-
+void mapBinaryToAscii(unsigned char* binaryBlock,  unsigned char* asciiBlock)
+{
+	*(asciiBlock) = (*(binaryBlock) & 0xfc) >> 2;
+	*(asciiBlock + 1) = ((*(binaryBlock) & 0x03) << 4) + ((*(binaryBlock + 1) & 0xf0) >> 4);
+	*(asciiBlock + 2) = ((*(binaryBlock +1) & 0x0f) << 2) + ((*(binaryBlock + 2) & 0xc0) >> 6);
+	*(asciiBlock+ 3) = *(binaryBlock + 2) & 0x3f;
+}
 
