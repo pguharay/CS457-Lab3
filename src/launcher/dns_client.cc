@@ -24,7 +24,7 @@ void showUsageandExit()
 
 string readDNSName(char* dnsName)
 {
-	string name;
+	string name("");
 	int i=0, length = 0;
 
 
@@ -36,9 +36,9 @@ string readDNSName(char* dnsName)
 
 	while(*(dnsName + i) != 0)
 	{
-		int count = *(dnsName + i);
+		int count = static_cast<unsigned char>(*(dnsName + i));
 
-		if((i+count) > length)
+		if((i+count) > length || count <= 0)
 		{
 			break;
 		}
@@ -52,7 +52,7 @@ string readDNSName(char* dnsName)
 		i =  i + count + 1;
 	}
 
-	return name;
+	return name.substr(0, name.length() -1 );
 }
 
 typedef struct __attribute__((packed)) ipv6_address {
@@ -116,7 +116,7 @@ void printRRSIG(char* name, int TTL, int qclass, RRSIG rrsig)
 void printCNAME(RR rr)
 {
 	printf("\n");
-	printf("%s ", rr.NAME);
+	printf("%s ", readDNSName(rr.NAME).c_str());
 	printf("%i ", ntohl(rr.info.TTL));
 
 	int qclass = ntohs(rr.info.CLASS);
