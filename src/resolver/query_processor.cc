@@ -108,7 +108,6 @@ void QueryProcessor::validateHostname(char* domainName){
 		exit(0);
 	}
 
-
 	//check if the host has at least 2 periods...
 	int period_count=0;
 	bool isInvalid=false;
@@ -118,7 +117,9 @@ void QueryProcessor::validateHostname(char* domainName){
 		}else{
 			//check for invalid character...
 			if(!isalnum(sName[i])){
-				isInvalid=true;
+				if(sName[i] != '-'){
+					isInvalid=true;
+				}
 			}
 		}
 	}
