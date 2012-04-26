@@ -53,6 +53,24 @@ void ResponseReader::readAnswer(char* response, Response* message)
 			offset++;
 		}
 
+		if(ntohs(message->answerRR[i].info.TYPE) == 5)
+		{
+			unsigned char jump = message->answerRR[i].RDATA[j-1];
+			int value = jump;
+
+			debug("offset %u \n", value);
+
+			string data;
+
+			j=j-2;
+
+			while(*(response + value) != 0)
+			{
+				message->answerRR[i].RDATA[j++] = (*(response + value));
+				value++;
+			}
+		}
+
 		message->answerRR[i].RDATA[j] = '\0';
 		offset += 1;
 	}
@@ -66,14 +84,16 @@ void ResponseReader::readAuthoritativeAnswer(char* response, Response* message)
 
 		while(*(response + offset) != '\0')
 		{
-			message->authorityRR[i].NAME[j] = *(response + offset);
+			message->authorityRR[i].NAME[j++] = *(response + offset);
 			offset += 1;
-			j++;
 		}
 
 		message->authorityRR[i].NAME[j] = '\0';
 
+		debug("NAME = %s \n", message->authorityRR[i].NAME);
+
 		memcpy(&(message->authorityRR[i].info), (response + offset), sizeof(RR_Info));
+
 		offset += sizeof(RR_Info);
 
 		for(j=0;j<ntohs(message->authorityRR[i].info.RDLENGTH);j++)

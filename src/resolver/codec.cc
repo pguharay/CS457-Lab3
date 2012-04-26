@@ -2,11 +2,7 @@
 
 using namespace std;
 
-const string base64_chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-             	 	 	 	 	 	 	 "abcdefghijklmnopqrstuvwxyz"
-             	 	 	 	 	 	 	 "0123456789+/";
-
-
+const string base64_chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
 string encode(unsigned char const* rawBinaryData, unsigned int dataLength)
 {
@@ -18,16 +14,15 @@ string encode(unsigned char const* rawBinaryData, unsigned int dataLength)
 
   while (dataLength--)
   {
-	  binaryBlock[i++] = *(rawBinaryData++);
+	binaryBlock[i++] = *(rawBinaryData++);
 
     if (i == 3)
     {
-
     	mapBinaryToAscii(binaryBlock, asciiBlock);
 
 		for(i = 0; (i <4) ; i++)
 		{
-		  encodedString += base64_chars[asciiBlock[i]];
+		  encodedString.push_back(base64_chars[asciiBlock[i]]);
 		}
 		i = 0;
 
@@ -43,14 +38,15 @@ string encode(unsigned char const* rawBinaryData, unsigned int dataLength)
 
     mapBinaryToAscii(binaryBlock, asciiBlock);
 
-    for (j = 0; (j < i + 1); j++)
+    for (j = 0; j < i + 1; j++)
     {
-    	encodedString += base64_chars[asciiBlock[j]];
+    	encodedString.push_back(base64_chars[asciiBlock[j]]);
     }
 
     while((i++ < 3))
+    {
     	encodedString += '=';
-
+    }
   }
 
   return encodedString;
