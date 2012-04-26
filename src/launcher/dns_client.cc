@@ -276,9 +276,9 @@ int main(int argc, char** argv)
 
 	// list of root servers on humboldt using dig . NS
 	int numServers = 9;
-	string rootServer[9] = {  "198.41.0.4", "192.228.79.201",   "192.33.4.12",
+	string rootServer[9] = {  "192.112.36.4", "198.41.0.4", "192.228.79.201",   "192.33.4.12",
 	                         "128.8.10.90", "192.203.230.10",   "192.5.5.241",
-	                        "192.112.36.4",    "128.63.2.53", "192.36.148.17"};
+	                           "128.63.2.53", "192.36.148.17"};
 
 
 	// == parse command line arguments ==

@@ -1,5 +1,5 @@
 #include "../common/codec.h"
-
+#include "../common/util.h"
 using namespace std;
 
 const string base64_chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
