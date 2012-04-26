@@ -5,6 +5,7 @@
  *      Author: jon
  */
 #include <string.h>
+#include <ctype.h>
 #include "../common/io.h"
 #include "../common/dns.h"
 #include "../common/query_processor.h"
@@ -28,7 +29,6 @@ Message QueryProcessor::getDnsQuery(char* hostAddress)
 
 	memcpy(request.QNAME, qname.c_str(), qname.length()+1);
 	request.QNAME[qname.length() + 1] = '\0';
-
 	request.query = question;
 
 	return request;
@@ -102,17 +102,31 @@ string QueryProcessor::formatDNSName(string domainName)
 void QueryProcessor::validateHostname(char* domainName){
 	string sName = string(domainName);
 
-	//check if the host has at least 3 periods...
+	//check if the size is greater then 128
+	if(sName.size() > 128){
+		perror("Invalid Hostname. Hostname too big.");
+		exit(0);
+	}
+
+
+	//check if the host has at least 2 periods...
 	int period_count=0;
+	bool isInvalid=false;
 	for(uint i=0; i < sName.size(); i++){
-		if(sName[i] == '.') period_count++;
+		if(sName[i] == '.'){
+			period_count++;
+		}else{
+			//check for invalid character...
+			if(!isalnum(sName[i])){
+				isInvalid=true;
+			}
+		}
 	}
 
-	if(period_count < 3){
-		perror("Invlalid hostname.");
-	//	exit;
+	if(period_count < 2 || isInvalid==true){
+		perror("Invalid hostname.");
+		exit(0);
 	}
-
 
 
 }
