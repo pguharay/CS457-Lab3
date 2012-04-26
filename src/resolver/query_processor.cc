@@ -29,7 +29,6 @@ Message QueryProcessor::getDnsQuery(char* hostAddress)
 
 	memcpy(request.QNAME, qname.c_str(), qname.length()+1);
 	request.QNAME[qname.length() + 1] = '\0';
-
 	request.query = question;
 
 	return request;
@@ -102,6 +101,13 @@ string QueryProcessor::formatDNSName(string domainName)
 
 void QueryProcessor::validateHostname(char* domainName){
 	string sName = string(domainName);
+
+	//check if the size is greater then 128
+	if(sName.size() > 128){
+		perror("Invalid Hostname. Hostname too big.");
+		exit(0);
+	}
+
 
 	//check if the host has at least 2 periods...
 	int period_count=0;
