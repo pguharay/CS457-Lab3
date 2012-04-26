@@ -75,7 +75,7 @@ typedef struct __attribute__((packed)) dnssec_rr
 	char 		public_key[256];
 }DNSSEC;
 
-typedef struct __attribute__((packed)) rrsig_rr
+typedef struct __attribute__((packed)) rrsig_fixed_size_field
 {
 	uint16_t 		type_covered;
 	uint8_t   		algorithm;
@@ -84,8 +84,13 @@ typedef struct __attribute__((packed)) rrsig_rr
 	uint32_t 		signature_expiration;
 	uint32_t 		signature_inception;
 	uint16_t        key_tag;
+}RRSIG_Fixed;
+
+typedef struct __attribute__((packed)) rrsig_rr
+{
+	RRSIG_Fixed fixed_length_data;
 	char 			signer[64];
-	char 			signature[512];
+	char 			signature[128];
 }RRSIG;
 
 

@@ -93,19 +93,19 @@ void printRRSIG(char* name, int TTL, int qclass, RRSIG rrsig)
 	printf("RRSIG ");
 
 	// print RDATA
-	int type_covered = ntohs(rrsig.type_covered);
+	int type_covered = ntohs(rrsig.fixed_length_data.type_covered);
 	if (type_covered == AAAA_QTYPE)
 		printf("AAAA ");
 	else if (type_covered == NSEC_QTYPE)
 		printf("NSEC ");
 	else
 		printf("TYPE%i ", type_covered);
-	printf("%i ", rrsig.algorithm);
-	printf("%i ", rrsig.labels);
-	printf("%i ", ntohl(rrsig.original_TTL));
-	printf("%i ", ntohl(rrsig.signature_expiration));
-	printf("%i ", ntohl(rrsig.signature_inception));
-	printf("%i ", ntohs(rrsig.key_tag));
+	printf("%i ", rrsig.fixed_length_data.algorithm);
+	printf("%i ", rrsig.fixed_length_data.labels);
+	printf("%i ", ntohl(rrsig.fixed_length_data.original_TTL));
+	printf("%i ", ntohl(rrsig.fixed_length_data.signature_expiration));
+	printf("%i ", ntohl(rrsig.fixed_length_data.signature_inception));
+	printf("%i ", ntohs(rrsig.fixed_length_data.key_tag));
 	printf("%s ", readDNSName(rrsig.signer).c_str());
 
 	string signature(rrsig.signature);
@@ -149,14 +149,39 @@ void publishRRData(Response message)
 		}
 		else if (ntohs(message.answerRR[i].info.TYPE) == RRSIG_QTYPE)
 		{
+			RRSIG_Fixed rrsigFixedLengthField;
 			RRSIG rrsigData;
-			memcpy(&rrsigData, message.answerRR[i].RDATA, sizeof(RRSIG));
+
+			memcpy(&rrsigFixedLengthField, message.answerRR[i].RDATA, sizeof(RRSIG_Fixed));
+
+			int offset = sizeof(RRSIG_Fixed);
+			int j= 0;
+
+			while(*(message.answerRR[i].RDATA + offset) != '\0')
+			{
+				rrsigData.signer[j++] = *(message.answerRR[i].RDATA + offset);
+				offset++;
+			}
+
+			rrsigData.signer[j] = '\0';
+			offset++;
+
+			j= 0;
+
+			while(*(message.answerRR[i].RDATA + offset) != '\0')
+			{
+				rrsigData.signature[j++] = *(message.answerRR[i].RDATA + offset);
+				offset++;
+			}
+			rrsigData.signature[j] = '\0';
+
+			rrsigData.fixed_length_data = rrsigFixedLengthField;
 
 			// for debug
-			printf("\n(Answer %i is RRSIG, Type covered =  %i, rdata length = %i)", i, ntohs(rrsigData.type_covered), ntohs(message.answerRR[i].info.RDLENGTH));
+			printf("\n(Answer %i is RRSIG, Type covered =  %i, rdata length = %i)", i, ntohs(rrsigData.fixed_length_data.type_covered), ntohs(message.answerRR[i].info.RDLENGTH));
 
 			// Type covered must match AAAA
-			if (ntohs(rrsigData.type_covered) == AAAA_QTYPE)
+			if (ntohs(rrsigData.fixed_length_data.type_covered) == AAAA_QTYPE)
 				printRRSIG(message.answerRR[i].NAME, ntohl(message.answerRR[i].info.TTL), ntohs(message.answerRR[i].info.CLASS), rrsigData);
 		}
 		else if (ntohs(message.answerRR[i].info.TYPE) == CNAME_QTYPE)

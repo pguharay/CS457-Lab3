@@ -58,8 +58,6 @@ void ResponseReader::readAnswer(char* response, Response* message)
 			unsigned char jump = message->answerRR[i].RDATA[j-1];
 			int value = jump;
 
-			debug("offset %u \n", value);
-
 			string data;
 
 			j=j-2;
