@@ -100,8 +100,6 @@ void ResponseReader::readAuthoritativeAnswer(char* response, Response* message)
 
 		message->authorityRR[i].NAME[j] = '\0';
 
-		debug("NAME = %s \n", message->authorityRR[i].NAME);
-
 		memcpy(&(message->authorityRR[i].info), (response + offset), sizeof(RR_Info));
 
 		offset += sizeof(RR_Info);
