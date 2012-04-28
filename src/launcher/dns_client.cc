@@ -180,9 +180,11 @@ void publishRRData(Response message)
 			// for debug
 			printf("\n(Answer %i is RRSIG, Type covered =  %i, rdata length = %i)", i, ntohs(rrsigData.fixed_length_data.type_covered), ntohs(message.answerRR[i].info.RDLENGTH));
 
-			// Type covered must match AAAA
-			if (ntohs(rrsigData.fixed_length_data.type_covered) == AAAA_QTYPE)
+			// Type covered must match AAAA or CNAME
+			if (ntohs(rrsigData.fixed_length_data.type_covered) == AAAA_QTYPE || ntohs(rrsigData.fixed_length_data.type_covered) == CNAME_QTYPE)
+			{
 				printRRSIG(const_cast<char*>(readDNSName(message.answerRR[i].NAME).c_str()), ntohl(message.answerRR[i].info.TTL), ntohs(message.answerRR[i].info.CLASS), rrsigData);
+			}
 		}
 		else if (ntohs(message.answerRR[i].info.TYPE) == CNAME_QTYPE)
 		{
