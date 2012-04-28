@@ -34,11 +34,23 @@ void ResponseReader::readAnswer(char* response, Response* message)
 	{
 		int j=0;
 
-		while(*(response + offset) != '\0')
+		while(*(response + offset) != 0)
 		{
 			message->answerRR[i].NAME[j] = *(response + offset);
 			offset += 1;
 			j++;
+		}
+
+		unsigned char jump = message->answerRR[i].NAME[j-1];
+		int value = jump;
+		string data;
+
+		j=j-1;
+
+		while(*(response + value) != 0)
+		{
+			message->answerRR[i].NAME[j++] = (*(response + value));
+			value++;
 		}
 
 		message->answerRR[i].NAME[j] = '\0';

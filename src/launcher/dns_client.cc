@@ -145,7 +145,7 @@ void publishRRData(Response message)
 			// for debug
 			printf("\n(Answer %i is AAAA, rdata length = %i)", i, ntohs(message.answerRR[i].info.RDLENGTH));
 
-			printAAAA(message.answerRR[i].NAME, ntohl(message.answerRR[i].info.TTL), ntohs(message.answerRR[i].info.CLASS), message.answerRR[i].RDATA);
+			printAAAA(const_cast<char*>(readDNSName(message.answerRR[i].NAME).c_str()), ntohl(message.answerRR[i].info.TTL), ntohs(message.answerRR[i].info.CLASS), message.answerRR[i].RDATA);
 		}
 		else if (ntohs(message.answerRR[i].info.TYPE) == RRSIG_QTYPE)
 		{
@@ -182,7 +182,7 @@ void publishRRData(Response message)
 
 			// Type covered must match AAAA
 			if (ntohs(rrsigData.fixed_length_data.type_covered) == AAAA_QTYPE)
-				printRRSIG(message.answerRR[i].NAME, ntohl(message.answerRR[i].info.TTL), ntohs(message.answerRR[i].info.CLASS), rrsigData);
+				printRRSIG(const_cast<char*>(readDNSName(message.answerRR[i].NAME).c_str()), ntohl(message.answerRR[i].info.TTL), ntohs(message.answerRR[i].info.CLASS), rrsigData);
 		}
 		else if (ntohs(message.answerRR[i].info.TYPE) == CNAME_QTYPE)
 		{
@@ -261,7 +261,7 @@ void printResponse(Response message)
 					ntohs(message.answerRR[i].info.TYPE),
 					ntohs(message.answerRR[i].info.RDLENGTH),
 					ntohl(message.answerRR[i].info.TTL),
-					message.answerRR[i].NAME);
+					readDNSName(message.answerRR[i].NAME).c_str());
 	}
 
 	info("]\n");
