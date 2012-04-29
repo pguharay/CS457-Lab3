@@ -12,7 +12,7 @@ UDPClient::UDPClient(string serverHost)
 	if (status != SUCCESS)
 	{
 		error("Unable to get server host information \n");
-		exit(1);
+		throw "Unable to resolve server address \n";
 	}
 
 	serverAddress = serverAddressResultList->ai_addr;
@@ -22,7 +22,7 @@ UDPClient::UDPClient(string serverHost)
 	if (socket < 0)
 	{
 		perror("Unable to create socket \n");
-		exit(1);
+		throw "Unable to create socket \n";
 	}
 
 	status = connect(socketID, serverAddressResultList->ai_addr, serverAddressResultList->ai_addrlen);
@@ -51,8 +51,6 @@ void UDPClient::sendRequest(Message message)
 
 		totalBytesSend += bytes;
 	}
-
-	//debug("Total %d bytes send \n", totalBytesSend);
 }
 
 void UDPClient :: createNetworkDataFromMessage(Message message)
@@ -77,7 +75,6 @@ void UDPClient :: createNetworkDataFromMessage(Message message)
 Response UDPClient::receiveResponse(ResponseReader* responseReader)
 {
 	char  buffer[65536];
-	//Message message;
 	socklen_t addrlen = sizeof(struct sockaddr);
 	int status = poll(&poller, 1, 3000);
 	int bytes = -1;
@@ -101,8 +98,6 @@ Response UDPClient::receiveResponse(ResponseReader* responseReader)
 			perror("Not enough bytes in response");
 			throw FAILURE;
 		}
-
-		//debug("Received %u bytes from server \n", bytes);
 	}
 
 	return formatResponseToMessage(buffer, responseReader);
