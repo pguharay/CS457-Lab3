@@ -55,6 +55,28 @@ string readDNSName(char* dnsName)
 	return name.substr(0, name.length() -1 );
 }
 
+string getQClassName(int qClassNum)
+{
+	if (qClassNum == 1)
+		return string("IN");
+	else
+		return string("Class" + qClassNum);
+}
+
+string getTypeName(int typeNum)
+{
+	if (typeNum == AAAA_QTYPE)
+		return string("AAAA");
+	else if (typeNum == RRSIG_QTYPE)
+		return string("RRSIG");
+	else if (typeNum == NSEC_QTYPE)
+		return string("NSEC");
+	else if (typeNum == CNAME_QTYPE)
+		return string("CNAME");
+	else
+		return string("TYPE" + typeNum);
+}
+
 typedef struct __attribute__((packed)) ipv6_address {
         uint16_t  segments[8];  // total 128 bits
 }IPv6Address;
@@ -64,10 +86,7 @@ void printAAAA(char* name, int TTL, int qclass, char* ipv6AddressData)
 	printf("\n");
 	printf("%s ", name);
 	printf("%i ", TTL);
-	if (qclass == 1)
-		printf("IN ");
-	else
-		printf("Class%i ", qclass);
+	printf("%s ", getQClassName(qclass).c_str());
 	printf("AAAA ");
 
 	IPv6Address address;
@@ -86,20 +105,11 @@ void printRRSIG(char* name, int TTL, int qclass, RRSIG rrsig)
 	printf("\n");
 	printf("%s ", name);
 	printf("%i ", TTL);
-	if (qclass == 1)
-		printf("IN ");
-	else
-		printf("Class%i ", qclass);
+	printf("%s ", getQClassName(qclass).c_str());
 	printf("RRSIG ");
 
 	// print RDATA
-	int type_covered = ntohs(rrsig.fixed_length_data.type_covered);
-	if (type_covered == AAAA_QTYPE)
-		printf("AAAA ");
-	else if (type_covered == NSEC_QTYPE)
-		printf("NSEC ");
-	else
-		printf("TYPE%i ", type_covered);
+	printf("%s ", getTypeName(ntohs(rrsig.fixed_length_data.type_covered)).c_str());
 	printf("%i ", rrsig.fixed_length_data.algorithm);
 	printf("%i ", rrsig.fixed_length_data.labels);
 	printf("%i ", ntohl(rrsig.fixed_length_data.original_TTL));
@@ -109,7 +119,6 @@ void printRRSIG(char* name, int TTL, int qclass, RRSIG rrsig)
 	printf("%s ", readDNSName(rrsig.signer).c_str());
 
 	string signature(rrsig.signature);
-
 	printf("%s ", encode(reinterpret_cast<const unsigned char*>(signature.c_str()), signature.length()).c_str());
 }
 
@@ -118,34 +127,39 @@ void printCNAME(RR rr)
 	printf("\n");
 	printf("%s ", readDNSName(rr.NAME).c_str());
 	printf("%i ", ntohl(rr.info.TTL));
-
-	int qclass = ntohs(rr.info.CLASS);
-	if ( qclass == 1)
-		printf("IN ");
-	else
-		printf("Class%i ", qclass);
-
+	printf("%s ", getQClassName(ntohs(rr.info.CLASS)).c_str());
 	printf("CNAME ");
 
 	string cname = readDNSName(rr.RDATA);
 	printf("%s ", cname.c_str());
-
 }
 
-void publishRRData(Response message)
+bool publishRRData(char* hostname, Response message, bool printDebugMsg)
 {
 	int numAnswers = ntohs(message.header.ANCOUNT);
-	// for debug
-	printf("\nProcessing %i answers\n",numAnswers);
+
+	int iAAAA = -1;
+	int iRRSIG_AAAA = -1;
+	RRSIG rrsigAAAA;
+
+	int iCNAME = -1;
+	int iRRSIG_CNAME = -1;
+	RRSIG rrsigCNAME;
+
+
+	if (printDebugMsg) printf("\nProcessing %i answers\n",numAnswers);
 
 	for(int i=0;i<numAnswers;i++)
 	{
 		if (ntohs(message.answerRR[i].info.TYPE) == AAAA_QTYPE)
 		{
-			// for debug
-			printf("\n(Answer %i is AAAA, rdata length = %i)", i, ntohs(message.answerRR[i].info.RDLENGTH));
+			if (printDebugMsg) printf("\n(Answer %i is AAAA, rdata length = %i)", i, ntohs(message.answerRR[i].info.RDLENGTH));
 
-			printAAAA(const_cast<char*>(readDNSName(message.answerRR[i].NAME).c_str()), ntohl(message.answerRR[i].info.TTL), ntohs(message.answerRR[i].info.CLASS), message.answerRR[i].RDATA);
+			// for debug - can there be one more than one AAAA record?
+			if (iAAAA != -1)
+				printf("More that one AAAA record found!");
+
+			iAAAA = i;
 		}
 		else if (ntohs(message.answerRR[i].info.TYPE) == RRSIG_QTYPE)
 		{
@@ -177,52 +191,69 @@ void publishRRData(Response message)
 
 			rrsigData.fixed_length_data = rrsigFixedLengthField;
 
-			// for debug
-			printf("\n(Answer %i is RRSIG, Type covered =  %i, rdata length = %i)", i, ntohs(rrsigData.fixed_length_data.type_covered), ntohs(message.answerRR[i].info.RDLENGTH));
+			if (printDebugMsg) printf("\n(Answer %i is RRSIG, Type covered =  %i, rdata length = %i)", i, ntohs(rrsigData.fixed_length_data.type_covered), ntohs(message.answerRR[i].info.RDLENGTH));
 
 			// Type covered must match AAAA or CNAME
-			if (ntohs(rrsigData.fixed_length_data.type_covered) == AAAA_QTYPE || ntohs(rrsigData.fixed_length_data.type_covered) == CNAME_QTYPE)
+			if (ntohs(rrsigData.fixed_length_data.type_covered) == AAAA_QTYPE)
 			{
-				printRRSIG(const_cast<char*>(readDNSName(message.answerRR[i].NAME).c_str()), ntohl(message.answerRR[i].info.TTL), ntohs(message.answerRR[i].info.CLASS), rrsigData);
+				iRRSIG_AAAA = i;
+				memcpy(&rrsigAAAA,&rrsigData,sizeof(RRSIG));
+			}
+			else if (ntohs(rrsigData.fixed_length_data.type_covered) == CNAME_QTYPE)
+			{
+				iRRSIG_CNAME = i;
+				memcpy(&rrsigCNAME,&rrsigData,sizeof(RRSIG));
 			}
 		}
 		else if (ntohs(message.answerRR[i].info.TYPE) == CNAME_QTYPE)
 		{
-			// for debug
-			printf("\n(Answer %i is CNAME,  rdata length = %i)", i, ntohs(message.answerRR[i].info.RDLENGTH));
-
-			printCNAME(message.answerRR[i]);
+			if (printDebugMsg) printf("\n(Answer %i is CNAME,  rdata length = %i)", i, ntohs(message.answerRR[i].info.RDLENGTH));
+			iCNAME = i;
 		}
 		else
 		{
-			// for debug
-			printf("\n(Answer %i is Type %i,  rdata length = %i)", i, ntohs(message.answerRR[i].info.TYPE), ntohs(message.answerRR[i].info.RDLENGTH));
+			if (printDebugMsg) printf("\n(Answer %i is Type %i,  rdata length = %i)", i, ntohs(message.answerRR[i].info.TYPE), ntohs(message.answerRR[i].info.RDLENGTH));
 		}
-
 	}
-}
 
-void printResults(char* hostname, int numAddresses, const char** addresses)
-{
-	if (numAddresses == 0)
-	{
-		printf("\nNo IPv6 addresses found for %s\n\n", hostname);
-	}
-	else
-	{
+	// now print the results in order and with comments
+
+	if (iAAAA != -1){
+		if (iRRSIG_AAAA != -1)
+		{
+			printf("\nIPv6 address and signature found for %s:\n\n", hostname);
+			printAAAA(const_cast<char*>(readDNSName(message.answerRR[iAAAA].NAME).c_str()), ntohl(message.answerRR[iAAAA].info.TTL), ntohs(message.answerRR[iAAAA].info.CLASS), message.answerRR[iAAAA].RDATA);
+			printRRSIG(const_cast<char*>(readDNSName(message.answerRR[iRRSIG_AAAA].NAME).c_str()), ntohl(message.answerRR[iRRSIG_AAAA].info.TTL), ntohs(message.answerRR[iRRSIG_AAAA].info.CLASS), rrsigAAAA);
+		}
+		else
+		{
+			printf("\nIPv6 address found for %s with no signature:\n\n", hostname);
+			printAAAA(const_cast<char*>(readDNSName(message.answerRR[iAAAA].NAME).c_str()), ntohl(message.answerRR[iAAAA].info.TTL), ntohs(message.answerRR[iAAAA].info.CLASS), message.answerRR[iAAAA].RDATA);
+		}
 		printf("\n");
-		printf("%i IPv6 address", numAddresses);
-		if (numAddresses > 1)
-			printf("es");
-		printf(" found for %s:\n", hostname);
-
-		for (int i=0; i<numAddresses; i++)
-			printf("\n%s", addresses[i]);
-
-		printf("\n");
+		return true;
 	}
-}
+	else if (iCNAME != -1)
+	{
+		printf("\nNo IPv6 address found for %s\n", hostname);
 
+		if (iRRSIG_CNAME != -1)
+		{
+			printf("CNAME and signature for %s are:\n", hostname);
+			printCNAME(message.answerRR[iCNAME]);
+			printRRSIG(const_cast<char*>(readDNSName(message.answerRR[iRRSIG_CNAME].NAME).c_str()), ntohl(message.answerRR[iRRSIG_CNAME].info.TTL), ntohs(message.answerRR[iRRSIG_CNAME].info.CLASS), rrsigCNAME);
+		}
+		else
+		{
+			printf("CNAME for %s is:\n", hostname);
+			printCNAME(message.answerRR[iCNAME]);
+		}
+		printf("\n");
+		return true;
+	}
+
+	return false;  // answers not AAAA nor CNAME
+}
 
 char* resolveRdataValue(uint16_t type, char* RDATA)
 {
@@ -298,8 +329,6 @@ void printResponse(Response message)
 int main(int argc, char** argv)
 {
 	char* hostName = NULL;
-	int nAddresses = 0;
-	const char** entries;
 
 	// list of root servers on humboldt using dig . NS
 	int numServers = 9;
@@ -309,8 +338,12 @@ int main(int argc, char** argv)
 
 
 	// == parse command line arguments ==
-	if (argc != 2)
-		showUsageandExit();
+	bool debug = false;
+	if (argc == 3 && strcmp(argv[2],"-debug")==0)
+		debug = true;
+	else
+		if (argc != 2)
+			showUsageandExit();
 
 	hostName = argv[1];
 
@@ -332,8 +365,7 @@ int main(int argc, char** argv)
 		// == set up UDP client ==
 		try
 		{
-			// if exists, need to destroy old client first??
-			printf("\n >>> Sending query to: %s\n", currentServer.c_str());
+			if (debug) printf("\n >>> Sending query to: %s\n", currentServer.c_str());
 
 			client = new UDPClient(currentServer);
 			reader = new ResponseReader();
@@ -382,13 +414,13 @@ int main(int argc, char** argv)
 		}
 		catch (...)
 		{
-			printf("Error reading message.");
+			printf("Error reading response message.");
+			return -1;
 		}
 		delete reader;
 		delete client;
 
-		// for debug
-		printResponse(message);
+		if (debug) printResponse(message);
 
 
 		// == process Response ==
@@ -406,8 +438,8 @@ int main(int argc, char** argv)
 					addr.sin_addr.s_addr = (*ptr);
 					currentServer = inet_ntoa(addr.sin_addr);
 
-					// for debug
-					printf("\nNot Authoritative Server - referred to: %s\n", currentServer.c_str());
+					if (debug) printf("\nNot Authoritative Server - referred to: %s\n", currentServer.c_str());
+
 					referralFound = true;
 //					break;
 				}
@@ -416,61 +448,57 @@ int main(int argc, char** argv)
 			if (referralFound)
 				continue;
 			else
-				printf("\nError finding referral server\n");
-		}
-		else
-		{
-			// for debug
-			printf("\n\n%s Is Authoritative Server\n", currentServer.c_str());
-			printf("\n============================================\n");
-
-			// check answer RRs
-			int numAnswers = ntohs(message.header.ANCOUNT);
-			if (numAnswers > 0)
 			{
-				publishRRData(message);
-			}
-			else
-			{
-				// for debug
-				printf("\nNo Answers found\n");
-				printf("\n============================================\n");
+				if (debug) printf("\nError finding referral server\n");
 
-				// try next root server
+				// advance to next root server
 				rootServerIndex++;
 				if (rootServerIndex == numServers)
 					break;
 				else
 					currentServer = rootServer[rootServerIndex];
-
-				continue;
+			}
+		}
+		else
+		{
+			if (debug)
+			{
+				printf("\n\n%s Is Authoritative Server\n", currentServer.c_str());
+				printf("\n============================================\n");
 			}
 
-			// for debug
-			printf("\n============================================\n");
+			// check answer RRs
+			int numAnswers = ntohs(message.header.ANCOUNT);
+			if (numAnswers > 0)
+			{
+				queryCompleted = publishRRData(hostName, message, debug);
+			}
+
+			if (queryCompleted)
+				return 1;
+
+			// if you get to this point, then there were no answers or the publish found no applicable answers
+			// try the next root server
+			if (debug)
+			{
+				printf("\nNo applicable answers found\n");
+				printf("\n============================================\n");
+			}
+
+			// advance to next root server
+			rootServerIndex++;
+			if (rootServerIndex == numServers)
+				break;
+			else
+				currentServer = rootServer[rootServerIndex];
+
+			continue;
+
+			if (debug) printf("\n============================================\n");
 		}
-
-
-		//==> submit new queries if needed
-
-		// for test, let's hit all the servers
-		//rootServerIndex++;
-		//if (rootServerIndex == numServers)
-			queryCompleted = true;  // set if no further queries
-		//else
-		//	currentServer = rootServer[rootServerIndex];
 	}
 
-/*
-	// for testing...
-	entries = new const char*[2];
-	nAddresses++;
-	entries[0] = std::string("this is a test").c_str();
-	nAddresses++;
-	entries[1] = std::string("this is a test too").c_str();
+	printf("\nUnable to find IPv6 address or CNAME for %s\n", hostName);
 
-	// == print results ==
-	printResults(hostName, nAddresses, entries);
-*/
 	return 1;
 }
