@@ -294,7 +294,7 @@ void printResponse(Response message)
 					ntohs(message.answerRR[i].info.TYPE),
 					ntohs(message.answerRR[i].info.RDLENGTH),
 					ntohl(message.answerRR[i].info.TTL),
-					readDNSName(message.answerRR[i].NAME).c_str());
+					message.answerRR[i].NAME);
 	}
 
 	info("]\n");
