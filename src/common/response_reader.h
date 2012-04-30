@@ -20,6 +20,8 @@ class ResponseReader
 		void readAdditionalAnswer(char* response, Response* message);
 	public:
 		Response read(char* response);
+		char* readName(char* response);
+		char* readPointer(char* response, int offsetPointer);
 };
 
 
