@@ -222,13 +222,13 @@ bool publishRRData(char* hostname, Response message, bool printDebugMsg)
 		if (iRRSIG_AAAA != -1)
 		{
 			printf("\nIPv6 address and signature found for %s:\n\n", hostname);
-			printAAAA(const_cast<char*>(readDNSName(message.answerRR[iAAAA].NAME).c_str()), ntohl(message.answerRR[iAAAA].info.TTL), ntohs(message.answerRR[iAAAA].info.CLASS), message.answerRR[iAAAA].RDATA);
-			printRRSIG(const_cast<char*>(readDNSName(message.answerRR[iRRSIG_AAAA].NAME).c_str()), ntohl(message.answerRR[iRRSIG_AAAA].info.TTL), ntohs(message.answerRR[iRRSIG_AAAA].info.CLASS), rrsigAAAA);
+			printAAAA(const_cast<char*>(message.answerRR[iAAAA].NAME), ntohl(message.answerRR[iAAAA].info.TTL), ntohs(message.answerRR[iAAAA].info.CLASS), message.answerRR[iAAAA].RDATA);
+			printRRSIG(const_cast<char*>(message.answerRR[iRRSIG_AAAA].NAME), ntohl(message.answerRR[iRRSIG_AAAA].info.TTL), ntohs(message.answerRR[iRRSIG_AAAA].info.CLASS), rrsigAAAA);
 		}
 		else
 		{
 			printf("\nIPv6 address found for %s with no signature:\n\n", hostname);
-			printAAAA(const_cast<char*>(readDNSName(message.answerRR[iAAAA].NAME).c_str()), ntohl(message.answerRR[iAAAA].info.TTL), ntohs(message.answerRR[iAAAA].info.CLASS), message.answerRR[iAAAA].RDATA);
+			printAAAA(const_cast<char*>(message.answerRR[iAAAA].NAME), ntohl(message.answerRR[iAAAA].info.TTL), ntohs(message.answerRR[iAAAA].info.CLASS), message.answerRR[iAAAA].RDATA);
 		}
 		printf("\n");
 		return true;
@@ -241,7 +241,7 @@ bool publishRRData(char* hostname, Response message, bool printDebugMsg)
 		{
 			printf("CNAME and signature for %s are:\n", hostname);
 			printCNAME(message.answerRR[iCNAME]);
-			printRRSIG(const_cast<char*>(readDNSName(message.answerRR[iRRSIG_CNAME].NAME).c_str()), ntohl(message.answerRR[iRRSIG_CNAME].info.TTL), ntohs(message.answerRR[iRRSIG_CNAME].info.CLASS), rrsigCNAME);
+			printRRSIG(const_cast<char*>(message.answerRR[iRRSIG_CNAME].NAME), ntohl(message.answerRR[iRRSIG_CNAME].info.TTL), ntohs(message.answerRR[iRRSIG_CNAME].info.CLASS), rrsigCNAME);
 		}
 		else
 		{
