@@ -1,20 +1,57 @@
 +===========================================================================+
-|					CS 457 - LAB 3										    |
+|			CS 457 - LAB 3					    |
 +===========================================================================+
-|	GROUP - THREECP							 	  						    |		
-|	DEVELOPMENT TEAM MEMBERS											    |
+|	GROUP - THREECP		  					    |		
+|	DEVELOPMENT TEAM MEMBERS					    |
 +===========================================================================+
 1. PRATIK GUHA RAY
-2. Jason Kim (818) 288-4710
+2. Jason Kim 
 3. Rebecca Mui
 4. Jon Eckstein
-
-     
-
++===========================================================================
+    
 How to make - 
+Run make clean to clear the build. 
+Run make all to build the project.
 
+How to run - 
+Execute myresolver <host name> to resolve a hostname to IPV6 RR (AAAA)
+along with RRSIG RR when present. If AAAA and RRSIG RR is not present 
+CNAME RR will be displayed for the hostname. 
++===========================================================================
 
 Project Structure - 
-
+.
+|-- makedns
+|-- makefile
+|-- ReadMe
+|-- src
+|   |-- common
+|   |   |-- codec.h
+|   |   |-- dns.h
+|   |   |-- io.h
+|   |   |-- query_processor.h
+|   |   |-- resolver.h
+|   |   |-- response_reader.h
+|   |   `-- util.h
+|   |-- io
+|   |   |-- response_reader.cc
+|   |   `-- udpclient.cc
+|   |-- launcher
+|   |   `-- dns_client.cc
+|   `-- resolver
+|       |-- codec.cc
+|       `-- query_processor.cc
++=======================================================================
 
 Callflow and collaboration - 
+1. dns_client.cc is the command line interface. It accepts the hostname and validates the same using 
+   query processor API. dns_client.cc maintains a list of known root servers to start the query chain.
+2. dns_client.cc invokes query processor API to prepare a DNS query with hostname being passed from
+   command line. dns_client passes on the formatted DNS query structure to udpclient.cc. 
+3. udpclient sends the request packet to target name server and polls for response. Once the response
+   is received, response buffer is passed to response_reader API for parsing and structural formating.
+4. Response reader does the parsing and creates the response structural elements. Response reader uses 
+   the codec API to perform Base64 encoding on RRSIG signature if present.This structural elements are
+   returned back to dns_client for response rendering.   
+
