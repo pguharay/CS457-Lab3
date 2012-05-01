@@ -28,12 +28,12 @@ Response ResponseReader::read(char* response)
 	return message;
 }
 
-char* ResponseReader::readName(char* response)
+string ResponseReader::readName(char* response)
 {
 	bool foundPointer = false;
 	bool ranOnce = false;
 	int i=0;
-	char name[32];
+	string name = "";
 
 	while(*(response + offset) != 0)
 	{
@@ -42,16 +42,16 @@ char* ResponseReader::readName(char* response)
 		if (testValue >= 192)
 		{
 			foundPointer = true;
-			char *ptrName = readPointer(response, offset);
+			string ptrName = readPointer(response, offset);
 			int j=0;
 			if (i==0)
 			{
 				// Skip Start Of Text character if this is the first character in the name
 				j=1;
 			}
-			while(*(ptrName + j) != '\0')
+			while(ptrName[j] != '\0')
 			{
-				name[i++] = *(ptrName + j);
+				name.push_back(ptrName[j]);
 				j++;
 			}
 			offset += 2;
@@ -61,18 +61,17 @@ char* ResponseReader::readName(char* response)
 		{
 			if (testValue == 3 || testValue == 2)
 			{
-				name[i++] = '.';
+				name.push_back('.');
 			}
 			else
 			{
-				name[i++] = (*(response + offset));
+				name.push_back((*(response + offset)));
 			}
 		}
 		offset += 1;
 		ranOnce = true;
 	}
-	name[i] = '\0';
-	debug("READ NAME: %s \n", name);
+	name.push_back('\0');
 
 	// if it got to the last char without a pointer in the name
 	if(!foundPointer)
@@ -83,7 +82,7 @@ char* ResponseReader::readName(char* response)
 	return name;
 }
 
-char* ResponseReader::readPointer(char* response, int offsetPointer)
+string ResponseReader::readPointer(char* response, int offsetPointer)
 {
 	int pointer = 0;
 	unsigned char first = *(response + offsetPointer);
@@ -92,37 +91,36 @@ char* ResponseReader::readPointer(char* response, int offsetPointer)
 	int secondValue = second;
 	pointer = (firstValue - 192)*256 + secondValue;
 
-	char name[32];
-	int i = 0;
+	string name = "";
 	while (*(response + pointer) != '\0')
 	{
 		unsigned char testChar = *(response + pointer);
 		int testValue = testChar;
 		if (testValue >= 192)
 		{
-			char *suffix = this->readPointer(response, pointer);
-			int j = 0;
-			while (*(suffix + j) != '\0')
+			string suffix = this->readPointer(response, pointer);
+			int i = 0;
+			while (suffix[i] != '\0')
 			{
-				name[i++] = (*(suffix + j));
-				j++;
+				name.push_back(suffix[i]);
+				i++;
 			}
-			name[i++] = '\0';
+			name.push_back('\0');
 			break;
 		}
 		else if (testValue < 32 && testValue > 0)
 		{
-			name[i++] = '.';
+			name.push_back('.');
 		}
 		else
 		{
-			name[i++] = (*(response + pointer));
+			name.push_back((*(response + pointer)));
 		}
 		pointer += 1;
 	}
 	if (*(response + pointer) == 0)
 	{
-		name[i++] = '\0';
+		name.push_back('\0');
 	}
 
 	return name;
@@ -133,10 +131,10 @@ void ResponseReader::readAnswer(char* response, Response* message)
 	for(int i=0;i<ntohs(message->header.ANCOUNT);i++)
 	{
 		int j=0;
-		char *dname = readName(response);
-		while(*(dname + j) != '\0')
+		string dname = readName(response);
+		while(dname[j] != '\0')
 		{
-			message->answerRR[i].NAME[j] = *(dname + j);
+			message->answerRR[i].NAME[j] = dname[j];
 			j++;
 		}
 		message->answerRR[i].NAME[j] = '\0';
@@ -175,10 +173,10 @@ void ResponseReader::readAuthoritativeAnswer(char* response, Response* message)
 	for(int i=0;i<ntohs(message->header.NSCOUNT);i++)
 	{
 		int j=0;
-		char *dname = readName(response);
-		while(*(dname + j) != '\0')
+		string dname = readName(response);
+		while(dname[j] != '\0')
 		{
-			message->authorityRR[i].NAME[j] = *(dname + j);
+			message->authorityRR[i].NAME[j] = dname[j];
 			j++;
 		}
 		message->authorityRR[i].NAME[j] = '\0';
@@ -191,7 +189,7 @@ void ResponseReader::readAuthoritativeAnswer(char* response, Response* message)
 //		if (ntohs(message->authorityRR[i].info.TYPE) == 2)
 //		{
 //			int savedOffset = offset;
-//			char *rname = readName(response);
+//			string rname = readName(response);
 //
 //			printf("RNAME IS %s\n", rname);
 //			offset = savedOffset;
@@ -212,10 +210,10 @@ void ResponseReader::readAdditionalAnswer(char* response, Response* message)
 	for(int i=0;i<ntohs(message->header.ARCOUNT);i++)
 	{
 		int j=0;
-		char *dname = readName(response);
-		while(*(dname + j) != '\0')
+		string dname = readName(response);
+		while(dname[j] != '\0')
 		{
-			message->additionalRR[i].NAME[j] = *(dname + j);
+			message->additionalRR[i].NAME[j] = dname[j];
 			j++;
 		}
 		message->additionalRR[i].NAME[j] = '\0';

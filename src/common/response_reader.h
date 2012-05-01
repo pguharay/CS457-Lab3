@@ -8,6 +8,8 @@
 #include <arpa/inet.h>
 #include "dns.h"
 
+using namespace std;
+
 #ifndef RESPONSE_READER_H_
 #define RESPONSE_READER_H_
 
@@ -20,8 +22,8 @@ class ResponseReader
 		void readAdditionalAnswer(char* response, Response* message);
 	public:
 		Response read(char* response);
-		char* readName(char* response);
-		char* readPointer(char* response, int offsetPointer);
+		string readName(char* response);
+		string readPointer(char* response, int offsetPointer);
 };
 
 
