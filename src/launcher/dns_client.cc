@@ -125,7 +125,7 @@ void printRRSIG(char* name, int TTL, int qclass, RRSIG rrsig)
 void printCNAME(RR rr)
 {
 	printf("\n");
-	printf("%s ", readDNSName(rr.NAME).c_str());
+	printf("%s ", rr.NAME);
 	printf("%i ", ntohl(rr.info.TTL));
 	printf("%s ", getQClassName(ntohs(rr.info.CLASS)).c_str());
 	printf("CNAME ");

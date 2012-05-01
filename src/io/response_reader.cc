@@ -72,6 +72,7 @@ char* ResponseReader::readName(char* response)
 		ranOnce = true;
 	}
 	name[i] = '\0';
+	debug("READ NAME: %s \n", name);
 
 	// if it got to the last char without a pointer in the name
 	if(!foundPointer)
@@ -109,7 +110,7 @@ char* ResponseReader::readPointer(char* response, int offsetPointer)
 			name[i++] = '\0';
 			break;
 		}
-		else if (testValue == 3 || testValue == 2)
+		else if (testValue < 32 && testValue > 0)
 		{
 			name[i++] = '.';
 		}
