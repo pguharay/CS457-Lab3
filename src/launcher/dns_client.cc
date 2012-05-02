@@ -7,6 +7,7 @@
 #include "../common/util.h"
 #include "../common/resolver.h"
 #include "../common/codec.h"
+#include "../common/referral_tracker.h"
 
 using namespace std;
 
@@ -81,16 +82,22 @@ typedef struct __attribute__((packed)) ipv6_address {
         uint16_t  segments[8];  // total 128 bits
 }IPv6Address;
 
-void printAAAA(char* name, int TTL, int qclass, char* ipv6AddressData)
+
+void printRRheader(RR rr)
 {
 	printf("\n");
-	printf("%s ", name);
-	printf("%i ", TTL);
-	printf("%s ", getQClassName(qclass).c_str());
-	printf("AAAA ");
+	printf("%s ", const_cast<char*>(rr.NAME) );
+	printf("%i ", ntohl(rr.info.TTL));
+	printf("%s ", getQClassName(ntohs(rr.info.CLASS)).c_str() );
+	printf("%s ", getTypeName(ntohs(rr.info.TYPE)).c_str() );
+}
+
+void printAAAA(RR rrAAAA)
+{
+	printRRheader(rrAAAA);
 
 	IPv6Address address;
-	memcpy(&address, ipv6AddressData, sizeof(IPv6Address));
+	memcpy(&address, &rrAAAA.RDATA, sizeof(IPv6Address));
 
 	for (int i=0; i<8; i++)
 	{
@@ -100,13 +107,9 @@ void printAAAA(char* name, int TTL, int qclass, char* ipv6AddressData)
 	}
 }
 
-void printRRSIG(char* name, int TTL, int qclass, RRSIG rrsig)
+void printRRSIG(RR rrRRSIG, RRSIG rrsig)
 {
-	printf("\n");
-	printf("%s ", name);
-	printf("%i ", TTL);
-	printf("%s ", getQClassName(qclass).c_str());
-	printf("RRSIG ");
+	printRRheader(rrRRSIG);
 
 	// print RDATA
 	printf("%s ", getTypeName(ntohs(rrsig.fixed_length_data.type_covered)).c_str());
@@ -124,11 +127,7 @@ void printRRSIG(char* name, int TTL, int qclass, RRSIG rrsig)
 
 void printCNAME(RR rr)
 {
-	printf("\n");
-	printf("%s ", rr.NAME);
-	printf("%i ", ntohl(rr.info.TTL));
-	printf("%s ", getQClassName(ntohs(rr.info.CLASS)).c_str());
-	printf("CNAME ");
+	printRRheader(rr);
 
 	string cname = readDNSName(rr.RDATA);
 	printf("%s ", cname.c_str());
@@ -222,13 +221,13 @@ bool publishRRData(char* hostname, Response message, bool printDebugMsg)
 		if (iRRSIG_AAAA != -1)
 		{
 			printf("\nIPv6 address and signature found for %s:\n\n", hostname);
-			printAAAA(const_cast<char*>(message.answerRR[iAAAA].NAME), ntohl(message.answerRR[iAAAA].info.TTL), ntohs(message.answerRR[iAAAA].info.CLASS), message.answerRR[iAAAA].RDATA);
-			printRRSIG(const_cast<char*>(message.answerRR[iRRSIG_AAAA].NAME), ntohl(message.answerRR[iRRSIG_AAAA].info.TTL), ntohs(message.answerRR[iRRSIG_AAAA].info.CLASS), rrsigAAAA);
+			printAAAA(message.answerRR[iAAAA]);
+			printRRSIG(message.answerRR[iRRSIG_AAAA], rrsigAAAA);
 		}
 		else
 		{
 			printf("\nIPv6 address found for %s with no signature:\n\n", hostname);
-			printAAAA(const_cast<char*>(message.answerRR[iAAAA].NAME), ntohl(message.answerRR[iAAAA].info.TTL), ntohs(message.answerRR[iAAAA].info.CLASS), message.answerRR[iAAAA].RDATA);
+			printAAAA(message.answerRR[iAAAA]);
 		}
 		printf("\n");
 		return true;
@@ -241,7 +240,7 @@ bool publishRRData(char* hostname, Response message, bool printDebugMsg)
 		{
 			printf("CNAME and signature for %s are:\n", hostname);
 			printCNAME(message.answerRR[iCNAME]);
-			printRRSIG(const_cast<char*>(message.answerRR[iRRSIG_CNAME].NAME), ntohl(message.answerRR[iRRSIG_CNAME].info.TTL), ntohs(message.answerRR[iRRSIG_CNAME].info.CLASS), rrsigCNAME);
+			printRRSIG(message.answerRR[iRRSIG_CNAME], rrsigCNAME);
 		}
 		else
 		{
@@ -316,14 +315,164 @@ void printResponse(Response message)
 	info("Additional Answer = [ \n");
 	for(int i=0;i<ntohs(message.header.ARCOUNT);i++)
 	{
-		debug("\t Class = %u, Type = %u, Length = %u, TTL = %u NAME = %s\n",
+		debug("\t Class = %u, Type = %u, Length = %u, TTL = %u NAME = %s DATA = %s\n",
 					ntohs(message.additionalRR[i].info.CLASS),
 					ntohs(message.additionalRR[i].info.TYPE),
 					ntohs(message.additionalRR[i].info.RDLENGTH),
 					ntohl(message.additionalRR[i].info.TTL),
+					const_cast<char*>(message.additionalRR[i].NAME),
 					resolveRdataValue(ntohs(message.additionalRR[i].info.TYPE), message.additionalRR[i].RDATA));
 	}
 	info("] \n");
+}
+
+bool getResponse(char* queryHostName, Message query, string serverIP, ReferralTracker* referralTracker, bool debug)
+{
+	UDPClient* client;
+	ResponseReader* reader;
+	Response message;
+
+	int maxTimeouts = 3;
+	int numTimeouts = 0;
+	bool responseReceived = false;
+
+	do
+	{
+		// == set up UDP client ==
+		try
+		{
+			if (debug) printf("\n >>> Sending query to: %s\n", serverIP.c_str());
+
+			client = new UDPClient(serverIP);
+		}
+		catch (...)
+		{
+			if (debug) printf("\n\nCould not connect to server.");
+			return false;
+		}
+
+		// == send request ==
+		client->sendRequest(query);
+
+		// == get Response ==
+		reader = new ResponseReader();
+		try
+		{
+			message = client->receiveResponse(reader);
+		}
+		catch (int status)
+		{
+			// if timeout, try again
+			if (status == FAILURE)
+			{
+				numTimeouts++;
+				if (numTimeouts == maxTimeouts)  // go to next root server
+				{
+					delete reader;
+					delete client;
+					if (debug) printf("\n\nServer timed out.");
+					return false;
+				}
+			}
+		}
+		catch (...)
+		{
+			printf("Error reading response message.");
+
+			if (debug) printf("\n\nError reading response message.");
+			return false;
+		}
+
+		responseReceived = true;
+
+		delete reader;
+		delete client;
+
+	} while (!responseReceived);
+
+	if (debug) printResponse(message);
+
+
+	// == process Response ==
+
+	// check if message is authoritative
+	bool queryCompleted = false;
+	if (message.header.AA == 0)  // not authoritative so get referral IP
+	{
+		for(int i=0;i<ntohs(message.header.ARCOUNT);i++)
+		{
+			if (ntohs(message.additionalRR[i].info.TYPE) == 1)
+			{
+				long* ptr = (long*)message.additionalRR[i].RDATA;
+				sockaddr_in addr;
+				addr.sin_addr.s_addr = (*ptr);
+				string referralServer = inet_ntoa(addr.sin_addr);
+
+				if ( referralTracker->containsIPAddress(referralServer) )
+				{
+					if (debug) printf("\n referral to previously referred server\n");
+					continue;
+				}
+				else
+				{
+					try
+					{
+						referralTracker->addIPAddress(referralServer);
+					}
+					catch(...)
+					{
+						// an error here mean over 30 (arbitrarily set high) referred servers has been attempted
+						// try next name server
+						return false;
+					}
+				}
+
+
+				if (debug) printf("\nNot Authoritative Server - referred to: %s\n", referralServer.c_str());
+
+				queryCompleted = getResponse(queryHostName, query, referralServer, referralTracker, debug);
+
+				if (queryCompleted)
+					return true;
+			}
+		}
+
+		if (debug) printf("\nError finding referral server\n");
+		return false;
+	}
+	else
+	{
+		if (debug)
+		{
+			printf("\n\n%s Is Authoritative Server\n", serverIP.c_str());
+			printf("\n============================================\n");
+		}
+
+		// check answer RRs
+		if (ntohs(message.header.ANCOUNT) > 0)
+			queryCompleted = publishRRData(queryHostName, message, debug);
+
+
+		if (!queryCompleted)
+		{
+			// if you get to this point, then there were no answers or the publish found no applicable answers
+			// try the next root server
+			if (debug)
+			{
+				printf("\nNo applicable answers found\n");
+				printf("\n============================================\n");
+			}
+
+			// advance to next root server
+			if (debug) printf("\n\nNo data found.");
+			return false;
+		}
+		else
+		{
+			if (debug) printf("\n============================================\n");
+			return true;
+		}
+	}
 }
 
 int main(int argc, char** argv)
@@ -335,7 +484,6 @@ int main(int argc, char** argv)
 	string rootServer[9] = {  "192.112.36.4", "198.41.0.4", "192.228.79.201",   "192.33.4.12",
 	                         "128.8.10.90", "192.203.230.10",   "192.5.5.241",
 	                           "128.63.2.53", "192.36.148.17"};
-
 
 	// == parse command line arguments ==
 	bool debug = false;
@@ -352,153 +500,27 @@ int main(int argc, char** argv)
 	Message queryMessage = qp->getDnsQuery(hostName);
 
 	// ==> start dns lookup...
-	UDPClient* client;
-	ResponseReader* reader;
 	int rootServerIndex = 0;
 	string currentServer = rootServer[rootServerIndex];
-	int maxTimeouts = 3;
-	int numTimeouts = 0;
-	bool queryCompleted = false;
+	bool getNextRootServer = false;
 
-	while (!queryCompleted)
+	ReferralTracker* referralTracker = new ReferralTracker();
+
+	while (!getResponse(hostName,queryMessage,currentServer, referralTracker, debug))
 	{
-		// == set up UDP client ==
-		try
-		{
-			if (debug) printf("\n >>> Sending query to: %s\n", currentServer.c_str());
-
-			client = new UDPClient(currentServer);
-			reader = new ResponseReader();
-		}
-		catch (...)
-		{
+			if (debug) printf("\nTrying next root server...\n");
 			rootServerIndex++;
 			if (rootServerIndex == numServers)
+			{
+				printf("\nUnable to find IPv6 address or CNAME for %s\n", hostName);
 				break;
-			else
-				currentServer = rootServer[rootServerIndex];
-
-			continue;
-		}
-
-		// == send request ==
-		client->sendRequest(queryMessage);
-
-
-		// == get Response ==
-		Response message;
-		try
-		{
-			message = client->receiveResponse(reader);
-		}
-		catch (int status)
-		{
-			delete reader;
-			delete client;
-
-			// if timeout, try again
-			if (status == FAILURE)
-			{
-				numTimeouts++;
-				if (numTimeouts == maxTimeouts)  // go to next root server
-				{
-					numTimeouts = 0;
-					rootServerIndex++;
-					if (rootServerIndex == numServers)
-						break;
-					else
-						currentServer = rootServer[rootServerIndex];
-				}
-				continue;
 			}
-		}
-		catch (...)
-		{
-			printf("Error reading response message.");
-			return -1;
-		}
-		delete reader;
-		delete client;
-
-		if (debug) printResponse(message);
-
-
-		// == process Response ==
-
-		// check if message is authoritative
-		bool referralFound = false;
-		if (message.header.AA == 0)  // not authoritative so get referral IP
-		{
-			for(int i=0;i<ntohs(message.header.NSCOUNT);i++)
-			{
-				if (ntohs(message.additionalRR[i].info.TYPE) == 1)
-				{
-					long* ptr = (long*)message.additionalRR[i].RDATA;
-					sockaddr_in addr;
-					addr.sin_addr.s_addr = (*ptr);
-					currentServer = inet_ntoa(addr.sin_addr);
-
-					if (debug) printf("\nNot Authoritative Server - referred to: %s\n", currentServer.c_str());
-
-					referralFound = true;
-//					break;
-				}
-			}
-
-			if (referralFound)
-				continue;
-			else
-			{
-				if (debug) printf("\nError finding referral server\n");
-
-				// advance to next root server
-				rootServerIndex++;
-				if (rootServerIndex == numServers)
-					break;
-				else
-					currentServer = rootServer[rootServerIndex];
-			}
-		}
-		else
-		{
-			if (debug)
-			{
-				printf("\n\n%s Is Authoritative Server\n", currentServer.c_str());
-				printf("\n============================================\n");
-			}
-
-			// check answer RRs
-			int numAnswers = ntohs(message.header.ANCOUNT);
-			if (numAnswers > 0)
-			{
-				queryCompleted = publishRRData(hostName, message, debug);
-			}
-
-			if (queryCompleted)
-				return 1;
-
-			// if you get to this point, then there were no answers or the publish found no applicable answers
-			// try the next root server
-			if (debug)
-			{
-				printf("\nNo applicable answers found\n");
-				printf("\n============================================\n");
-			}
-
-			// advance to next root server
-			rootServerIndex++;
-			if (rootServerIndex == numServers)
-				break;
-			else
-				currentServer = rootServer[rootServerIndex];
-
-			continue;
-
-			if (debug) printf("\n============================================\n");
-		}
+			currentServer = rootServer[rootServerIndex];
+			getNextRootServer = false;
 	}
 
-	printf("\nUnable to find IPv6 address or CNAME for %s\n", hostName);
+	if (debug) printf("\n# referred servers = %i\n", referralTracker->getNumberOfAddresses());
 
 	return 1;
 }
+
