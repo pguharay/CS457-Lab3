@@ -148,6 +148,7 @@ void ResponseReader::readAnswer(char* response, Response* message)
 			offset++;
 		}
 
+
 		if(ntohs(message->answerRR[i].info.TYPE) == 5)
 		{
 			unsigned char jump = message->answerRR[i].RDATA[j-1];
