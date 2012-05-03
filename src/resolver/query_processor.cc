@@ -104,7 +104,7 @@ void QueryProcessor::validateHostname(char* domainName){
 
 	//check if the size is greater then 128
 	if(sName.size() > 128){
-		perror("Invalid Hostname. Hostname too big.");
+		error("Invalid Hostname. Hostname too big.");
 		exit(0);
 	}
 
@@ -125,7 +125,7 @@ void QueryProcessor::validateHostname(char* domainName){
 	}
 
 	if(period_count < 2 || isInvalid==true){
-		perror("Invalid hostname.");
+		error("Invalid hostname.");
 		exit(0);
 	}
 
