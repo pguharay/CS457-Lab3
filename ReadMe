@@ -31,6 +31,7 @@ Project Structure -
 |   |   |-- dns.h
 |   |   |-- io.h
 |   |   |-- query_processor.h
+|   |   |-- referral_tracker.h
 |   |   |-- resolver.h
 |   |   |-- response_reader.h
 |   |   `-- util.h
@@ -38,7 +39,8 @@ Project Structure -
 |   |   |-- response_reader.cc
 |   |   `-- udpclient.cc
 |   |-- launcher
-|   |   `-- dns_client.cc
+|   |   |-- dns_client.cc
+|   |   `-- referral_tracker.cc
 |   `-- resolver
 |       |-- codec.cc
 |       `-- query_processor.cc
@@ -46,12 +48,14 @@ Project Structure -
 
 Callflow and collaboration - 
 1. dns_client.cc is the command line interface. It accepts the hostname and validates the same using 
-   query processor API. dns_client.cc maintains a list of known root servers to start the query chain.
+   query processor API. dns_client.cc maintains a list of known root servers to start the query chain,
+   and iterates through the referred servers until the desired records are found or until all servers
+   have been queried.
 2. dns_client.cc invokes query processor API to prepare a DNS query with hostname being passed from
    command line. dns_client passes on the formatted DNS query structure to udpclient.cc. 
 3. udpclient sends the request packet to target name server and polls for response. Once the response
    is received, response buffer is passed to response_reader API for parsing and structural formating.
 4. Response reader does the parsing and creates the response structural elements. Response reader uses 
-   the codec API to perform Base64 encoding on RRSIG signature if present.This structural elements are
+   the codec API to perform Base64 encoding on RRSIG signature if present.  The structural elements are
    returned back to dns_client for response rendering.   
 
