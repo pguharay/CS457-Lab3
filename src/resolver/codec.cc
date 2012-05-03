@@ -4,7 +4,7 @@ using namespace std;
 
 const string base64_chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
-string encode(unsigned char const* rawBinaryData, unsigned int dataLength)
+string encode(char* rawBinaryData, unsigned int dataLength)
 {
   string encodedString;
   int i = 0;

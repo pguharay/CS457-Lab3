@@ -122,7 +122,8 @@ void printRRSIG(RR rrRRSIG, RRSIG rrsig)
 	printf("%s ", readDNSName(rrsig.signer).c_str());
 
 	string signature(rrsig.signature);
-	printf("%s ", encode(reinterpret_cast<const unsigned char*>(signature.c_str()), signature.length()).c_str());
+
+	printf("%s ", encode(rrsig.signature, 128).c_str());
 }
 
 void printCNAME(RR rr)
@@ -181,7 +182,9 @@ bool publishRRData(char* hostname, Response message, bool printDebugMsg)
 
 			j= 0;
 
-			while(*(message.answerRR[i].RDATA + offset) != '\0')
+			//debug("\n offset %d \n", offset);
+			//while(*(message.answerRR[i].RDATA + offset) != '\0')
+			while(j<128)
 			{
 				rrsigData.signature[j++] = *(message.answerRR[i].RDATA + offset);
 				offset++;
