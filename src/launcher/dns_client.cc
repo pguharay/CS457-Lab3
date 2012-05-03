@@ -505,7 +505,7 @@ int main(int argc, char** argv)
 	// ==> start dns lookup...
 	int rootServerIndex = 0;
 	string currentServer = rootServer[rootServerIndex];
-	bool getNextRootServer = false;
+//	bool getNextRootServer = false;
 
 	ReferralTracker* referralTracker = new ReferralTracker();
 
@@ -519,7 +519,7 @@ int main(int argc, char** argv)
 				break;
 			}
 			currentServer = rootServer[rootServerIndex];
-			getNextRootServer = false;
+//			getNextRootServer = false;
 	}
 
 	if (debug) printf("\n# referred servers = %i\n", referralTracker->getNumberOfAddresses());
